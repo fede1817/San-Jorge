@@ -38,6 +38,9 @@ function LoginPage() {
         onChange={(e) => setPassword(e.target.value)}
       />
       <button onClick={handleLogin}>Ingresar</button>
+      <button onClick={() => (window.location.href = "/register")}>
+        ¿No tienes cuenta? Registrate
+      </button>
     </div>
   );
 }
