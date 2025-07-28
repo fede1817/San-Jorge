@@ -108,6 +108,10 @@ function Dashboard() {
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           paciente={pacienteSeleccionado}
+          onGuardar={() => {
+            // podrías refrescar los datos o notificar al usuario
+            console.log("Tratamiento guardado");
+          }}
         />
       )}
     </div>

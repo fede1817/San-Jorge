@@ -21,14 +21,17 @@ const TratamientoModal = ({ isOpen, onClose, paciente, onGuardar }) => {
   // Este es el fragmento que te falta: la función para guardar
   const guardarTratamiento = async () => {
     try {
-      const res = await fetch(`/api/pacientes/${paciente.id}/tratamiento`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(form),
-      });
+      const res = await fetch(
+        `http://localhost:3001/api/pacientes/${paciente.id}/tratamiento`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(form),
+        }
+      );
 
       if (res.ok) {
         onGuardar();

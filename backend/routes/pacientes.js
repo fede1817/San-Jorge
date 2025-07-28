@@ -53,7 +53,8 @@ router.put("/:id", verificarToken, async (req, res) => {
 // Eliminar paciente
 router.delete("/:id", verificarToken, async (req, res) => {
   const { id } = req.params;
-  await pool.query("DELETE FROM pacientes WHERE id=$1", [id]);
+  await pool.query("DELETE FROM tratamientos WHERE paciente_id = $1", [id]);
+  await pool.query("DELETE FROM pacientes WHERE id = $1", [id]);
   res.json({ mensaje: "Paciente eliminado" });
 });
 
