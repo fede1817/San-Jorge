@@ -7,13 +7,22 @@ function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [matricula, setMatricula] = useState("");
+  const [especialidad, setEspecialidad] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = async () => {
     const res = await fetch("http://localhost:3001/api/login/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, apellido, email, password }),
+      body: JSON.stringify({
+        nombre,
+        apellido,
+        email,
+        password,
+        matricula,
+        especialidad,
+      }),
     });
 
     const data = await res.json();
@@ -49,6 +58,19 @@ function RegisterPage() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
+      <input
+        type="ci"
+        placeholder="Cedula de indentidad"
+        value={matricula}
+        onChange={(e) => setMatricula(e.target.value)}
+      />
+      <input
+        type="especialidad"
+        placeholder="Especialidad"
+        value={especialidad}
+        onChange={(e) => setEspecialidad(e.target.value)}
+      />
+
       <button onClick={handleRegister}>Registrarse</button>
       {mensaje && <p>{mensaje}</p>}
     </div>

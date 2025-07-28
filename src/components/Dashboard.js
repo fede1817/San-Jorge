@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PacienteModal from "./PacienteModal";
+import TratamientoModal from "./TratamientoModal";
 
 function Dashboard() {
   const [pacientes, setPacientes] = useState([]);
   const navigate = useNavigate();
   const [modalAbierto, setModalAbierto] = useState(false);
   const [paciente, setPaciente] = useState({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
+
+  const abrirModal = (p) => {
+    setPacienteSeleccionado(p);
+    setModalOpen(true);
+  };
 
   const fetchPacientes = async () => {
     const token = localStorage.getItem("token");
@@ -81,6 +89,7 @@ function Dashboard() {
           <p>Teléfono: {p.telefono}</p>
           <p>Tratamiento: {p.procedimiento}</p>
           <p>Próxima consulta: {p.proxima_consulta}</p>
+          <button onClick={() => abrirModal(p)}>Agregar Tratamiento</button>
           <button onClick={() => abrirModalEditar(p)}>Editar</button>
           <button onClick={() => eliminarPaciente(p.id)}>Eliminar</button>
         </div>
@@ -93,6 +102,14 @@ function Dashboard() {
         paciente={paciente}
         setPaciente={setPaciente}
       />
+
+      {pacienteSeleccionado && (
+        <TratamientoModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          paciente={pacienteSeleccionado}
+        />
+      )}
     </div>
   );
 }

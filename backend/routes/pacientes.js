@@ -24,8 +24,7 @@ router.get("/", verificarToken, async (req, res) => {
   res.json(result.rows);
 });
 
-module.exports = router;
-
+// Crear paciente
 router.post("/", verificarToken, async (req, res) => {
   const odontologoId = req.odontologoId;
   const { nombre, apellido, telefono } = req.body;
@@ -38,6 +37,7 @@ router.post("/", verificarToken, async (req, res) => {
   res.status(201).json({ mensaje: "Paciente creado" });
 });
 
+// Actualizar paciente
 router.put("/:id", verificarToken, async (req, res) => {
   const { nombre, apellido, telefono } = req.body;
   const { id } = req.params;
@@ -50,8 +50,48 @@ router.put("/:id", verificarToken, async (req, res) => {
   res.json({ mensaje: "Paciente actualizado" });
 });
 
+// Eliminar paciente
 router.delete("/:id", verificarToken, async (req, res) => {
   const { id } = req.params;
   await pool.query("DELETE FROM pacientes WHERE id=$1", [id]);
   res.json({ mensaje: "Paciente eliminado" });
 });
+
+// Agregar tratamiento a un paciente
+router.post("/:id/tratamiento", verificarToken, async (req, res) => {
+  const pacienteId = req.params.id;
+  const odontologoId = req.odontologoId;
+  const {
+    fecha,
+    diagnostico,
+    procedimiento,
+    observaciones,
+    estado,
+    proxima_consulta,
+  } = req.body;
+
+  try {
+    await pool.query(
+      `INSERT INTO tratamientos 
+        (paciente_id, odontologo_id, fecha, diagnostico, procedimiento, observaciones, estado, proxima_consulta)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        pacienteId,
+        odontologoId,
+        fecha,
+        diagnostico,
+        procedimiento,
+        observaciones,
+        estado,
+        proxima_consulta,
+      ]
+    );
+
+    res.status(201).json({ mensaje: "Tratamiento guardado" });
+  } catch (error) {
+    console.error("Error al guardar tratamiento:", error);
+    res.status(500).json({ mensaje: "Error al guardar tratamiento" });
+  }
+});
+
+module.exports = router;

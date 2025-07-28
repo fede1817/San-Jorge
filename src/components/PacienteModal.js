@@ -7,58 +7,57 @@ function PacienteModal({ isOpen, onClose, onSave, paciente, setPaciente }) {
     setPaciente({ ...paciente, [e.target.name]: e.target.value });
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave();
+  };
+
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
-        <h3>{paciente?.id ? "Editar paciente" : "Agregar paciente"}</h3>
+    <div style={modalEstilo}>
+      <h3>{paciente.id ? "Editar paciente" : "Nuevo paciente"}</h3>
+      <form onSubmit={handleSubmit}>
         <input
+          type="text"
           name="nombre"
           placeholder="Nombre"
           value={paciente.nombre || ""}
           onChange={handleChange}
+          required
         />
         <input
+          type="text"
           name="apellido"
           placeholder="Apellido"
           value={paciente.apellido || ""}
           onChange={handleChange}
+          required
         />
         <input
+          type="text"
           name="telefono"
           placeholder="Teléfono"
           value={paciente.telefono || ""}
           onChange={handleChange}
+          required
         />
-        <div style={{ marginTop: "10px" }}>
-          <button onClick={onSave}>Guardar</button>
-          <button onClick={onClose} style={{ marginLeft: "10px" }}>
-            Cancelar
-          </button>
-        </div>
-      </div>
+
+        <button type="submit">Guardar</button>
+        <button type="button" onClick={onClose}>
+          Cancelar
+        </button>
+      </form>
     </div>
   );
 }
 
-const styles = {
-  overlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    height: "100vh",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1000,
-  },
-  modal: {
-    background: "white",
-    padding: "20px",
-    borderRadius: "10px",
-    minWidth: "300px",
-  },
+const modalEstilo = {
+  position: "fixed",
+  top: "20%",
+  left: "30%",
+  right: "30%",
+  padding: "2rem",
+  background: "white",
+  boxShadow: "0 0 10px rgba(0,0,0,0.3)",
 };
 
 export default PacienteModal;
