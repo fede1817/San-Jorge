@@ -11,7 +11,7 @@ function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
 
-  const abrirModal = (p) => {
+  const abrirModalProcedimiento = (p) => {
     setPacienteSeleccionado(p);
     setModalOpen(true);
   };
@@ -77,6 +77,22 @@ function Dashboard() {
     fetchPacientes();
   };
 
+  const verTratamientos = (paciente) => {
+    if (paciente.tratamientos && paciente.tratamientos.length > 0) {
+      alert(
+        `Tratamientos de ${paciente.nombre} ${paciente.apellido}:\n\n` +
+          paciente.tratamientos
+            .map(
+              (t, i) =>
+                `${i + 1}. ${t.fecha}: ${t.diagnostico} - ${t.procedimiento}`
+            )
+            .join("\n")
+      );
+    } else {
+      alert("Este paciente aún no tiene tratamientos.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md">
@@ -90,42 +106,51 @@ function Dashboard() {
         </button>
 
         <div className="space-y-4">
-          {pacientes.map((p) => (
-            <div
-              key={p.id}
-              className="p-4 border border-gray-200 rounded-lg shadow-sm bg-gray-50"
-            >
-              <h4 className="text-lg font-semibold text-gray-800">
-                {p.nombre} {p.apellido}
-              </h4>
-              <p className="text-gray-600">📞 Teléfono: {p.telefono}</p>
-              <p className="text-gray-600">🦷 Tratamiento: {p.procedimiento}</p>
-              <p className="text-gray-600">
-                📅 Próxima consulta: {p.proxima_consulta}
-              </p>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  onClick={() => abrirModal(p)}
-                  className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
-                >
-                  Agregar Tratamiento
-                </button>
-                <button
-                  onClick={() => abrirModalEditar(p)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => eliminarPaciente(p.id)}
-                  className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          ))}
+          <table className="min-w-full border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="p-2 border">Nombre</th>
+                <th className="p-2 border">Apellido</th>
+                <th className="p-2 border">Teléfono</th>
+                <th className="p-2 border">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pacientes.map((p) => (
+                <tr key={p.id}>
+                  <td className="p-2 border">{p.nombre}</td>
+                  <td className="p-2 border">{p.apellido}</td>
+                  <td className="p-2 border">{p.telefono}</td>
+                  <td className="p-2 border space-x-2">
+                    <button
+                      onClick={() => abrirModalProcedimiento(p)}
+                      className="text-sm bg-blue-500 text-white px-2 py-1 rounded"
+                    >
+                      Agregar Tratamiento
+                    </button>
+                    <button
+                      onClick={() => abrirModalEditar(p)}
+                      className="text-sm bg-yellow-500 text-white px-2 py-1 rounded"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => eliminarPaciente(p.id)}
+                      className="text-sm bg-red-500 text-white px-2 py-1 rounded"
+                    >
+                      Eliminar
+                    </button>
+                    <button
+                      onClick={() => verTratamientos(p)}
+                      className="text-sm bg-gray-700 text-white px-2 py-1 rounded"
+                    >
+                      Ver tratamientos
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -145,6 +170,7 @@ function Dashboard() {
           paciente={pacienteSeleccionado}
           onGuardar={() => {
             console.log("Tratamiento guardado");
+            fetchPacientes();
           }}
         />
       )}

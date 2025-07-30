@@ -36,6 +36,7 @@ const TratamientoModal = ({ isOpen, onClose, paciente, onGuardar }) => {
       if (res.ok) {
         onGuardar();
         onClose();
+        setForm({});
       } else {
         alert("Error al guardar tratamiento");
       }

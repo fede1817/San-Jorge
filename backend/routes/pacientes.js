@@ -10,13 +10,26 @@ router.get("/", verificarToken, async (req, res) => {
 
   const result = await pool.query(
     `
-    SELECT 
-      p.id, p.nombre, p.apellido, p.telefono,
-      t.procedimiento, t.proxima_consulta
-    FROM pacientes p
-    LEFT JOIN tratamientos t ON p.id = t.paciente_id
-    WHERE p.odontologo_id = $1
-    ORDER BY t.proxima_consulta ASC
+  SELECT 
+    p.id, p.nombre, p.apellido, p.telefono,
+    COALESCE(
+      json_agg(
+        jsonb_build_object(
+          'id', t.id,
+          'fecha', t.fecha,
+          'diagnostico', t.diagnostico,
+          'procedimiento', t.procedimiento,
+          'observaciones', t.observaciones,
+          'estado', t.estado,
+          'proxima_consulta', t.proxima_consulta
+        )
+      ) FILTER (WHERE t.id IS NOT NULL), '[]'
+    ) AS tratamientos
+  FROM pacientes p
+  LEFT JOIN tratamientos t ON p.id = t.paciente_id
+  WHERE p.odontologo_id = $1
+  GROUP BY p.id, p.nombre, p.apellido, p.telefono
+  ORDER BY MIN(t.proxima_consulta) ASC
   `,
     [odontologoId]
   );
