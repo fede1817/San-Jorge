@@ -50,83 +50,106 @@ const TratamientoModal = ({ isOpen, onClose, paciente, onGuardar }) => {
       isOpen={isOpen}
       onRequestClose={onClose}
       contentLabel="Nuevo Tratamiento"
-      style={{
-        content: {
-          top: "50%",
-          left: "50%",
-          right: "auto",
-          bottom: "auto",
-          marginRight: "-50%",
-          transform: "translate(-50%, -50%)",
-          padding: "20px",
-          width: "400px",
-        },
-        overlay: {
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-        },
-      }}
+      className="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg mx-auto mt-20 outline-none"
+      overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     >
-      <h2>
+      <h2 className="text-xl font-bold mb-4 text-gray-700">
         Nuevo tratamiento para {paciente.nombre} {paciente.apellido}
       </h2>
 
-      <label>Fecha:</label>
-      <input
-        type="date"
-        name="fecha"
-        value={form.fecha}
-        onChange={handleChange}
-      />
+      <form className="space-y-4">
+        <div>
+          <label className="block mb-1 font-medium text-sm">Fecha</label>
+          <input
+            type="date"
+            name="fecha"
+            value={form.fecha}
+            onChange={handleChange}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
+        </div>
 
-      <label>Diagnóstico:</label>
-      <input
-        type="text"
-        name="diagnostico"
-        value={form.diagnostico}
-        onChange={handleChange}
-        placeholder="Diagnóstico"
-      />
+        <div>
+          <label className="block mb-1 font-medium text-sm">Diagnóstico</label>
+          <input
+            type="text"
+            name="diagnostico"
+            value={form.diagnostico}
+            onChange={handleChange}
+            placeholder="Diagnóstico"
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
+        </div>
 
-      <label>Procedimiento:</label>
-      <input
-        type="text"
-        name="procedimiento"
-        value={form.procedimiento}
-        onChange={handleChange}
-        placeholder="Procedimiento"
-      />
+        <div>
+          <label className="block mb-1 font-medium text-sm">
+            Procedimiento
+          </label>
+          <input
+            type="text"
+            name="procedimiento"
+            value={form.procedimiento}
+            onChange={handleChange}
+            placeholder="Procedimiento"
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
+        </div>
 
-      <label>Observaciones:</label>
-      <textarea
-        name="observaciones"
-        value={form.observaciones}
-        onChange={handleChange}
-        placeholder="Observaciones"
-      />
+        <div>
+          <label className="block mb-1 font-medium text-sm">
+            Observaciones
+          </label>
+          <textarea
+            name="observaciones"
+            value={form.observaciones}
+            onChange={handleChange}
+            placeholder="Observaciones"
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
+        </div>
 
-      <label>Estado:</label>
-      <input
-        type="text"
-        name="estado"
-        value={form.estado}
-        onChange={handleChange}
-        placeholder="Estado"
-      />
+        <div>
+          <label className="block mb-1 font-medium text-sm">Estado</label>
+          <input
+            type="text"
+            name="estado"
+            value={form.estado}
+            onChange={handleChange}
+            placeholder="Estado"
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
+        </div>
 
-      <label>Próxima consulta:</label>
-      <input
-        type="date"
-        name="proxima_consulta"
-        value={form.proxima_consulta}
-        onChange={handleChange}
-      />
+        <div>
+          <label className="block mb-1 font-medium text-sm">
+            Próxima consulta
+          </label>
+          <input
+            type="date"
+            name="proxima_consulta"
+            value={form.proxima_consulta}
+            onChange={handleChange}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
+        </div>
 
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={guardarTratamiento} style={{ marginRight: "10px" }}>
-          Guardar
-        </button>
-        <button onClick={onClose}>Cancelar</button>
-      </div>
+        <div className="flex justify-end space-x-3 pt-4">
+          <button
+            type="button"
+            onClick={guardarTratamiento}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            Guardar
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
     </Modal>
   );
 };
