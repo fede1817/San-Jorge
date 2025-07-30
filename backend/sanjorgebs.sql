@@ -5,7 +5,7 @@
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.5
 
--- Started on 2025-07-28 15:11:56
+-- Started on 2025-07-30 16:03:06
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -205,7 +205,7 @@ COPY public.odontologos_unificados (id, nombre, apellido, email, password_hash, 
 COPY public.pacientes (id, nombre, apellido, cedula, fecha_nacimiento, telefono, email, odontologo_id) FROM stdin;
 8	german	cano	\N	\N	0974551151	\N	7
 9	ariel 	zoilan	\N	\N	097455156	\N	7
-6	pablo.huert	zavala	\N	\N	0974551151	\N	1
+20	Arnaldo	cano	\N	\N	0974551151	\N	1
 \.
 
 
@@ -216,9 +216,10 @@ COPY public.pacientes (id, nombre, apellido, cedula, fecha_nacimiento, telefono,
 --
 
 COPY public.tratamientos (id, paciente_id, odontologo_id, fecha, diagnostico, procedimiento, observaciones, estado, proxima_consulta) FROM stdin;
-3	6	1	2025-07-29	dfd	dsa		dgfd	2025-07-30
 5	8	7	2025-07-28	dfd	dasdad	asdadasdasdad	sdadasdsasda	2025-07-31
 6	9	7	2025-07-23	dfd	dsa	asda	sdasdsadasdada	2025-07-31
+24	20	1	2025-07-30	perdida de incicivos	extraccion		muerto	2025-08-06
+25	20	1	2025-07-29	perdida de incicivos	cogida		sdasdsadasdada	2025-07-31
 \.
 
 
@@ -237,7 +238,7 @@ SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 7, true);
 -- Name: pacientes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.pacientes_id_seq', 9, true);
+SELECT pg_catalog.setval('public.pacientes_id_seq', 20, true);
 
 
 --
@@ -246,7 +247,7 @@ SELECT pg_catalog.setval('public.pacientes_id_seq', 9, true);
 -- Name: tratamientos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tratamientos_id_seq', 7, true);
+SELECT pg_catalog.setval('public.tratamientos_id_seq', 25, true);
 
 
 --
@@ -321,7 +322,7 @@ ALTER TABLE ONLY public.tratamientos
     ADD CONSTRAINT tratamientos_paciente_id_fkey FOREIGN KEY (paciente_id) REFERENCES public.pacientes(id);
 
 
--- Completed on 2025-07-28 15:11:56
+-- Completed on 2025-07-30 16:03:06
 
 --
 -- PostgreSQL database dump complete
