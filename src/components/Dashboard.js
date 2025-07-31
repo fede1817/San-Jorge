@@ -95,10 +95,10 @@ function Dashboard() {
   };
 
   // Función para abrir modal de procedimiento
-  const abrirModalProcedimiento = (p) => {
-    setPacienteSeleccionado(p);
-    setModalOpen(true);
-  };
+  // const abrirModalProcedimiento = (p) => {
+  //   setPacienteSeleccionado(p);
+  //   setModalOpen(true);
+  // };
 
   // Función para eliminar paciente
   const eliminarPaciente = async (id) => {
@@ -194,7 +194,7 @@ function Dashboard() {
       >
         <div className="p-4 flex items-center justify-between border-b border-teal-700">
           {sidebarOpen ? (
-            <h1 className="text-xl font-bold">OdontoPlus</h1>
+            <h1 className="text-xl font-bold">San Jorge</h1>
           ) : (
             <div className="w-8 h-8 bg-teal-700 rounded-full"></div>
           )}
@@ -355,9 +355,9 @@ function Dashboard() {
                                   <div className="text-sm font-medium text-gray-900">
                                     {p.nombre} {p.apellido}
                                   </div>
-                                  <div className="text-xs text-gray-500">
+                                  {/* <div className="text-xs text-gray-500">
                                     ID: {p.id}
-                                  </div>
+                                  </div> */}
                                 </div>
                               </div>
                             </td>
@@ -384,13 +384,13 @@ function Dashboard() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <div className="flex justify-end space-x-2">
-                                <button
+                                {/* <button
                                   onClick={() => abrirModalProcedimiento(p)}
                                   className="text-blue-600 hover:text-blue-800 p-1"
                                   title="Agregar tratamiento"
                                 >
                                   <FiFileText />
-                                </button>
+                                </button> */}
                                 <button
                                   onClick={() => verTratamientos(p)}
                                   className="text-gray-600 hover:text-gray-800 p-1"
@@ -435,7 +435,7 @@ function Dashboard() {
         setPaciente={setPaciente}
       />
 
-      {pacienteSeleccionado && (
+      {/* {pacienteSeleccionado && (
         <TratamientoModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
@@ -445,7 +445,7 @@ function Dashboard() {
             toast.success("Tratamiento registrado");
           }}
         />
-      )}
+      )} */}
 
       {pacienteParaVer && (
         <VerTratamientosModal
