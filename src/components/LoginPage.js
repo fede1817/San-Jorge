@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,15 +25,28 @@ function LoginPage() {
       });
 
       const data = await res.json();
-      if (data.token) {
+
+      if (res.status === 200 && data.token) {
         localStorage.setItem("token", data.token);
-        toast.success("¡Bienvenido!");
-        setTimeout(() => navigate("/dashboard"), 1500);
+        // Asegúrate que el backend devuelva los datos completos del usuario
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            nombre: data.user.nombre,
+            apellido: data.user.apellido,
+            especialidad: data.user.especialidad,
+            email: data.user.email,
+            matricula: data.user.matricula,
+          })
+        );
+
+        toast.success(`Bienvenido Dr. ${data.user.nombre}`);
+        navigate("/dashboard");
       } else {
         toast.error(data.error || "Credenciales inválidas");
       }
     } catch (error) {
-      toast.error("Error de conexión");
+      toast.error("Error de conexión con el servidor");
     } finally {
       setLoading(false);
     }

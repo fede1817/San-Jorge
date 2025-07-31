@@ -24,7 +24,16 @@ router.post("/login", async (req, res) => {
   const token = jwt.sign({ id: odontologo.id }, "secreto_super_seguro", {
     expiresIn: "8h",
   });
-  res.json({ token });
+  res.json({
+    token,
+    user: {
+      nombre: odontologo.nombre,
+      apellido: odontologo.apellido,
+      especialidad: odontologo.especialidad,
+      email: odontologo.email,
+      matricula: odontologo.matricula,
+    },
+  });
 });
 
 // Registro (opcional)
