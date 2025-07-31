@@ -71,6 +71,22 @@ router.delete("/:id", verificarToken, async (req, res) => {
   res.json({ mensaje: "Paciente eliminado" });
 });
 
+router.get("/:id/tratamiento", verificarToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM tratamientos WHERE paciente_id = $1 ORDER BY fecha DESC",
+      [id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error al obtener tratamientos:", error);
+    res.status(500).json({ mensaje: "Error al obtener tratamientos" });
+  }
+});
+
 // Agregar tratamiento a un paciente
 router.post("/:id/tratamiento", verificarToken, async (req, res) => {
   const pacienteId = req.params.id;
