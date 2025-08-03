@@ -5,7 +5,7 @@
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.5
 
--- Started on 2025-08-01 14:57:39
+-- Started on 2025-08-03 13:47:19
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -125,7 +125,9 @@ CREATE TABLE public.tratamientos (
     procedimiento text,
     observaciones text,
     estado character varying(50) DEFAULT 'En curso'::character varying,
-    proxima_consulta date
+    proxima_consulta date,
+    hora time without time zone,
+    motivo character varying(255)
 );
 
 
@@ -209,6 +211,7 @@ COPY public.pacientes (id, nombre, apellido, cedula, fecha_nacimiento, telefono,
 9	ariel 	zoilan	\N	\N	097455156	\N	7
 20	Arnaldo	cano	\N	\N	0974551151	\N	1
 25	german	dasilva	\N	\N	0974777777	\N	3
+27	JOSE	zoilan	\N	\N	0974551151	\N	1
 \.
 
 
@@ -218,14 +221,19 @@ COPY public.pacientes (id, nombre, apellido, cedula, fecha_nacimiento, telefono,
 -- Data for Name: tratamientos; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.tratamientos (id, paciente_id, odontologo_id, fecha, diagnostico, procedimiento, observaciones, estado, proxima_consulta) FROM stdin;
-5	8	7	2025-07-28	dfd	dasdad	asdadasdasdad	sdadasdsasda	2025-07-31
-6	9	7	2025-07-23	dfd	dsa	asda	sdasdsadasdada	2025-07-31
-24	20	1	2025-07-30	perdida de incicivos	extraccion		muerto	2025-08-06
-25	20	1	2025-07-29	perdida de incicivos	cogida		sdasdsadasdada	2025-07-31
-26	20	1	2025-07-31	perdida de incicivos	extraccion		muerto	2025-08-02
-27	20	1	2025-07-30	pilpitis	extraccion		sdadasdsasda	2025-08-02
-28	20	1	2025-07-30	cancer	cogida		dgfd	2025-08-09
+COPY public.tratamientos (id, paciente_id, odontologo_id, fecha, diagnostico, procedimiento, observaciones, estado, proxima_consulta, hora, motivo) FROM stdin;
+5	8	7	2025-07-28	dfd	dasdad	asdadasdasdad	sdadasdsasda	2025-07-31	\N	\N
+6	9	7	2025-07-23	dfd	dsa	asda	sdasdsadasdada	2025-07-31	\N	\N
+24	20	1	2025-07-30	perdida de incicivos	extraccion		muerto	2025-08-06	\N	\N
+25	20	1	2025-07-29	perdida de incicivos	cogida		sdasdsadasdada	2025-07-31	\N	\N
+26	20	1	2025-07-31	perdida de incicivos	extraccion		muerto	2025-08-02	\N	\N
+27	20	1	2025-07-30	pilpitis	extraccion		sdadasdsasda	2025-08-02	\N	\N
+28	20	1	2025-07-30	cancer	cogida		dgfd	2025-08-09	\N	\N
+30	20	1	2025-08-03	\N	fsdff	\N	cancelado	\N	\N	\N
+33	27	1	2025-09-26	\N	hola2	\N	cancelado	\N	\N	\N
+32	27	1	2025-08-03	\N	fdsaf	\N	cancelado	\N	\N	\N
+31	27	1	2025-08-03	\N	HOLA	\N	cancelado	\N	\N	\N
+34	27	1	2025-08-23	\N	dolores	\N	cancelado	\N	\N	\N
 \.
 
 
@@ -244,7 +252,7 @@ SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 9, true);
 -- Name: pacientes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.pacientes_id_seq', 26, true);
+SELECT pg_catalog.setval('public.pacientes_id_seq', 27, true);
 
 
 --
@@ -253,7 +261,7 @@ SELECT pg_catalog.setval('public.pacientes_id_seq', 26, true);
 -- Name: tratamientos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tratamientos_id_seq', 29, true);
+SELECT pg_catalog.setval('public.tratamientos_id_seq', 34, true);
 
 
 --
@@ -328,7 +336,7 @@ ALTER TABLE ONLY public.tratamientos
     ADD CONSTRAINT tratamientos_paciente_id_fkey FOREIGN KEY (paciente_id) REFERENCES public.pacientes(id);
 
 
--- Completed on 2025-08-01 14:57:39
+-- Completed on 2025-08-03 13:47:19
 
 --
 -- PostgreSQL database dump complete
