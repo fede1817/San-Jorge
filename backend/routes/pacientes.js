@@ -62,7 +62,40 @@ router.put("/:id", verificarToken, async (req, res) => {
 
   res.json({ mensaje: "Paciente actualizado" });
 });
+// Rutas para tratamientos/citas
+router.get("/proximas", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        t.*,
+        p.nombre AS paciente_nombre,
+        p.telefono
+      FROM tratamientos t
+      JOIN pacientes p ON t.paciente_id = p.id
+      WHERE t.estado = 'programado'
+      AND t.fecha >= CURRENT_DATE
+      ORDER BY t.fecha, t.hora
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { estado } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE tratamientos SET estado = $1 WHERE id = $2 RETURNING *`,
+      [estado, id]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // Eliminar paciente
 router.delete("/:id", verificarToken, async (req, res) => {
   const { id } = req.params;
@@ -121,6 +154,26 @@ router.post("/:id/tratamiento", verificarToken, async (req, res) => {
   } catch (error) {
     console.error("Error al guardar tratamiento:", error);
     res.status(500).json({ mensaje: "Error al guardar tratamiento" });
+  }
+});
+
+// PUT /api/tratamientos/:id/cancelar
+router.put("/:id/cancelar", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      "UPDATE tratamientos SET estado = $1 WHERE id = $2 RETURNING *",
+      ["cancelado", id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Cita no encontrada" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

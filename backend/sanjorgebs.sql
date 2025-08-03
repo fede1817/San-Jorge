@@ -5,7 +5,7 @@
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.5
 
--- Started on 2025-07-30 16:03:06
+-- Started on 2025-08-01 14:57:39
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -193,6 +193,8 @@ COPY public.odontologos_unificados (id, nombre, apellido, email, password_hash, 
 4	Luis	P‚rez	\N	\N	Odontolog¡a	OD12345	2025-07-28 08:54:44.280983
 6	JOSE 	CARLOS	J@gmail.com	$2b$10$cWNrCOQH50xSdAlFnuvZFucw085LG.dTK0u47XuW67Fzubl2NfBrG	ORTODONCIA	5150902	2025-07-28 10:04:07.607589
 7	jose 	cardozo	jose@gmail.com	$2b$10$KLPfaYV2aiq6WUxesCvG7e9Vf1hbGjiET2RJ0NdI2d/9rBSzbjil6	neurologo	4150902	2025-07-28 14:54:20.494568
+8	jane	doe	german@gmail.com	$2b$10$s/on8INPrduENTOBF06u2.SxFn5LBaZ5qYLnU5xA/RAeet7VVY49S	Endodoncia	5150902	2025-07-31 10:13:37.006683
+9	Arnaldo	zoilan	l@gmail.com	$2b$10$evNeA2yJHzHE9Uso1wDxY.SlNDqIfHeABKTX9kj5vE96KiDq0Aupm	Cirugía	5150902	2025-07-31 10:16:32.071063
 \.
 
 
@@ -206,6 +208,7 @@ COPY public.pacientes (id, nombre, apellido, cedula, fecha_nacimiento, telefono,
 8	german	cano	\N	\N	0974551151	\N	7
 9	ariel 	zoilan	\N	\N	097455156	\N	7
 20	Arnaldo	cano	\N	\N	0974551151	\N	1
+25	german	dasilva	\N	\N	0974777777	\N	3
 \.
 
 
@@ -220,6 +223,9 @@ COPY public.tratamientos (id, paciente_id, odontologo_id, fecha, diagnostico, pr
 6	9	7	2025-07-23	dfd	dsa	asda	sdasdsadasdada	2025-07-31
 24	20	1	2025-07-30	perdida de incicivos	extraccion		muerto	2025-08-06
 25	20	1	2025-07-29	perdida de incicivos	cogida		sdasdsadasdada	2025-07-31
+26	20	1	2025-07-31	perdida de incicivos	extraccion		muerto	2025-08-02
+27	20	1	2025-07-30	pilpitis	extraccion		sdadasdsasda	2025-08-02
+28	20	1	2025-07-30	cancer	cogida		dgfd	2025-08-09
 \.
 
 
@@ -229,7 +235,7 @@ COPY public.tratamientos (id, paciente_id, odontologo_id, fecha, diagnostico, pr
 -- Name: odontologos_unificados_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 7, true);
+SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 9, true);
 
 
 --
@@ -238,7 +244,7 @@ SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 7, true);
 -- Name: pacientes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.pacientes_id_seq', 20, true);
+SELECT pg_catalog.setval('public.pacientes_id_seq', 26, true);
 
 
 --
@@ -247,7 +253,7 @@ SELECT pg_catalog.setval('public.pacientes_id_seq', 20, true);
 -- Name: tratamientos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tratamientos_id_seq', 25, true);
+SELECT pg_catalog.setval('public.tratamientos_id_seq', 29, true);
 
 
 --
@@ -322,7 +328,7 @@ ALTER TABLE ONLY public.tratamientos
     ADD CONSTRAINT tratamientos_paciente_id_fkey FOREIGN KEY (paciente_id) REFERENCES public.pacientes(id);
 
 
--- Completed on 2025-07-30 16:03:06
+-- Completed on 2025-08-01 14:57:39
 
 --
 -- PostgreSQL database dump complete
