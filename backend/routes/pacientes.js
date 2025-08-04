@@ -72,9 +72,11 @@ router.get("/proximas", async (req, res) => {
         p.telefono
       FROM tratamientos t
       JOIN pacientes p ON t.paciente_id = p.id
-      WHERE t.estado = 'programado'
-      AND t.fecha >= CURRENT_DATE
-      ORDER BY t.fecha, t.hora
+      WHERE t.fecha >= CURRENT_DATE
+      ORDER BY 
+        CASE WHEN t.estado = 'programado' THEN 1 ELSE 2 END, -- Mostrar primero las programadas
+        t.fecha, 
+        t.hora
     `);
     res.json(result.rows);
   } catch (error) {
@@ -131,13 +133,14 @@ router.post("/:id/tratamiento", verificarToken, async (req, res) => {
     observaciones,
     estado,
     proxima_consulta,
+    hora,
   } = req.body;
 
   try {
     await pool.query(
       `INSERT INTO tratamientos 
-        (paciente_id, odontologo_id, fecha, diagnostico, procedimiento, observaciones, estado, proxima_consulta)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        (paciente_id, odontologo_id, fecha, diagnostico, procedimiento, observaciones, estado, proxima_consulta, hora)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         pacienteId,
         odontologoId,
@@ -147,6 +150,7 @@ router.post("/:id/tratamiento", verificarToken, async (req, res) => {
         observaciones,
         estado,
         proxima_consulta,
+        hora,
       ]
     );
 
@@ -163,15 +167,18 @@ router.put("/:id/cancelar", async (req, res) => {
 
   try {
     const result = await pool.query(
-      "UPDATE tratamientos SET estado = $1 WHERE id = $2 RETURNING *",
-      ["cancelado", id]
+      `UPDATE tratamientos 
+       SET estado = 'cancelado' 
+       WHERE id = $1 
+       RETURNING *`, // Asegúrate de incluir RETURNING
+      [id]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Cita no encontrada" });
     }
 
-    res.json(result.rows[0]);
+    res.json(result.rows[0]); // Devuelve el registro actualizado
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

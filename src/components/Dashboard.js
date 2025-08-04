@@ -84,14 +84,13 @@ function Dashboard() {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `http://localhost:3001/api/pacientes/${id}/cancelar`, // Ajustado a tu endpoint
+        `http://localhost:3001/api/pacientes/${id}/cancelar`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ estado: "cancelado" }),
         }
       );
 
@@ -100,8 +99,14 @@ function Dashboard() {
         throw new Error(errorData.message || "Error al cancelar cita");
       }
 
+      // Actualizar el estado localmente sin eliminar la fila
+      setCitas(
+        citas.map((cita) =>
+          cita.id === id ? { ...cita, estado: "cancelado" } : cita
+        )
+      );
+
       toast.success("Cita cancelada correctamente");
-      fetchCitas(); // Actualizar lista de citas
     } catch (error) {
       toast.error(error.message);
       console.error("Error al cancelar cita:", error);
@@ -364,47 +369,62 @@ function Dashboard() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Procedimiento
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Estado
+                        </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Acciones
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {citas
-                        .filter((cita) => cita.estado !== "cancelado")
-                        .map((cita) => (
-                          <tr key={cita.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
-                                  <FiUser />
+                      {citas.map((cita) => (
+                        <tr key={cita.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
+                                <FiUser />
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {cita.paciente_nombre}
                                 </div>
-                                <div className="ml-4">
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {cita.paciente_nombre}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    Tel: {cita.telefono || "N/A"}
-                                  </div>
+                                <div className="text-xs text-gray-500">
+                                  Tel: {cita.telefono || "N/A"}
                                 </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
-                                {formatFecha(cita.fecha)}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
-                                {formatHora(cita.hora)}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="text-sm text-gray-900">
-                                {cita.procedimiento || "Consulta"}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {formatFecha(cita.fecha)}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {formatHora(cita.hora)}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900">
+                              {cita.procedimiento || "Consulta"}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                cita.estado === "programado"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : cita.estado === "completado"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {cita.estado}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            {cita.estado === "programado" && (
                               <button
                                 onClick={() => cancelarCita(cita.id)}
                                 className="text-red-600 hover:text-red-800 p-1"
@@ -412,9 +432,10 @@ function Dashboard() {
                               >
                                 <FiX size={18} />
                               </button>
-                            </td>
-                          </tr>
-                        ))}
+                            )}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
