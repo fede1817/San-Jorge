@@ -3,7 +3,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiClock, FiUser, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
-
+import SearchableSelect from "../ui/SearchableSelect";
 export default function CitaModal({
   isOpen,
   onClose,
@@ -54,26 +54,13 @@ export default function CitaModal({
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Paciente *
-            </label>
-            <select
-              value={cita.paciente_id}
-              onChange={(e) =>
-                setCita({ ...cita, paciente_id: e.target.value })
-              }
-              className="w-full p-2 border rounded"
-              required
-            >
-              <option value="">Seleccionar paciente</option>
-              {pacientes.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre} {p.apellido}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SearchableSelect
+            pacientes={pacientes}
+            value={cita.paciente_id}
+            onChange={(pacienteId) =>
+              setCita({ ...cita, paciente_id: pacienteId })
+            }
+          />
 
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-medium mb-1">

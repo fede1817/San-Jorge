@@ -63,9 +63,10 @@ router.put("/:id", verificarToken, async (req, res) => {
   res.json({ mensaje: "Paciente actualizado" });
 });
 // Rutas para tratamientos/citas
-router.get("/proximas", async (req, res) => {
+router.get("/proximas", verificarToken, async (req, res) => {
   try {
-    const result = await pool.query(`
+    const result = await pool.query(
+      `
       SELECT 
         t.*,
         p.nombre AS paciente_nombre,
@@ -73,11 +74,15 @@ router.get("/proximas", async (req, res) => {
       FROM tratamientos t
       JOIN pacientes p ON t.paciente_id = p.id
       WHERE t.fecha >= CURRENT_DATE
+      AND t.odontologo_id = $1
       ORDER BY 
-        CASE WHEN t.estado = 'programado' THEN 1 ELSE 2 END, -- Mostrar primero las programadas
+        CASE WHEN t.estado = 'programado' THEN 1 ELSE 2 END,
         t.fecha, 
         t.hora
-    `);
+    `,
+      [req.odontologoId] // Cambiado de req.user.id a req.odontologoId
+    );
+
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
