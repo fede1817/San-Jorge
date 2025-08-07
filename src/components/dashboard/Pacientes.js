@@ -1,6 +1,7 @@
 import { FiUser, FiPhone, FiCalendar, FiEdit2, FiTrash2 } from "react-icons/fi";
 import EmptyState from "./EmptyState";
 import Table from "./Table";
+import Swal from "sweetalert2";
 
 export default function Pacientes({
   pacientes,
@@ -10,6 +11,51 @@ export default function Pacientes({
   onViewTreatments,
   formatFecha,
 }) {
+  const handleDeleteWithConfirmation = (id, nombreCompleto) => {
+    Swal.fire({
+      title: "¿Eliminar paciente?",
+      html: `
+        <div class="text-left">
+          <p>Estás a punto de eliminar al paciente:</p>
+          <p class="font-bold">${nombreCompleto}</p>
+          <p class="text-red-600 mt-2">¡Esta acción no se puede deshacer!</p>
+        </div>
+      `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#0d9488",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      customClass: {
+        popup: "text-left",
+        confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition", // Estilo similar a tus botones
+        cancelButton: "px-4 py-2 rounded-md hover:bg-gray-300 transition", // Estilo similar a tus botones
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onDelete(id);
+        Swal.fire({
+          title: "¡Eliminado!",
+          text: "El paciente ha sido eliminado correctamente.",
+          icon: "success",
+          confirmButtonColor: "#0d9488", // Color teal-600
+          customClass: {
+            confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
+          },
+        });
+      }
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+      </div>
+    );
+  }
+
   if (pacientes.length === 0) {
     return (
       <EmptyState
@@ -94,7 +140,12 @@ export default function Pacientes({
             <FiEdit2 />
           </button>
           <button
-            onClick={() => onDelete(row.id)}
+            onClick={() =>
+              handleDeleteWithConfirmation(
+                row.id,
+                `${row.nombre} ${row.apellido}`
+              )
+            }
             className="text-red-600 hover:text-red-800 p-1"
             title="Eliminar"
           >

@@ -3,7 +3,9 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiClock, FiUser, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import SearchableSelect from "../ui/SearchableSelect";
+
 export default function CitaModal({
   isOpen,
   onClose,
@@ -20,7 +22,7 @@ export default function CitaModal({
     odontologo_id: odontologoId,
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!cita.paciente_id) {
@@ -28,14 +30,73 @@ export default function CitaModal({
       return;
     }
 
-    const citaParaEnviar = {
-      ...cita,
-      fecha: cita.fecha.toISOString().split("T")[0],
-      odontologo_id: odontologoId,
-    };
+    // Mostrar confirmación antes de guardar
+    const result = await Swal.fire({
+      title: "¿Confirmar cita?",
+      html: `
+        <div class="text-left">
+          <p><strong>Paciente:</strong> ${
+            pacientes.find((p) => p.id === cita.paciente_id)?.nombre || ""
+          }</p>
+          <p><strong>Fecha:</strong> ${cita.fecha.toLocaleDateString()}</p>
+          <p><strong>Hora:</strong> ${cita.hora}</p>
+          ${
+            cita.procedimiento
+              ? `<p><strong>Procedimiento:</strong> ${cita.procedimiento}</p>`
+              : ""
+          }
+        </div>
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#0d9488", // teal-600
+      cancelButtonColor: "#6b7280", // gray-500
+      confirmButtonText: "Sí, agendar",
+      cancelButtonText: "Cancelar",
+      customClass: {
+        popup: "text-left rounded-lg",
+        confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
+        cancelButton: "px-4 py-2 rounded-md hover:bg-gray-200 transition",
+      },
+    });
 
-    onSave(citaParaEnviar);
-    onClose();
+    if (result.isConfirmed) {
+      const citaParaEnviar = {
+        ...cita,
+        fecha: cita.fecha.toISOString().split("T")[0],
+        odontologo_id: odontologoId,
+      };
+
+      setCita({
+        paciente_id: "",
+        fecha: new Date(),
+        hora: "09:00",
+        procedimiento: "",
+        estado: "programado",
+        odontologo_id: odontologoId,
+      });
+
+      try {
+        await onSave(citaParaEnviar);
+        Swal.fire({
+          title: "¡Cita agendada!",
+          text: "La cita se ha programado correctamente.",
+          icon: "success",
+          confirmButtonColor: "#0d9488", // teal-600
+          customClass: {
+            confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
+          },
+        });
+        onClose();
+      } catch (error) {
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo agendar la cita.",
+          icon: "error",
+          confirmButtonColor: "#0d9488", // teal-600
+        });
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -107,13 +168,13 @@ export default function CitaModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
+              className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition"
             >
               Guardar Cita
             </button>

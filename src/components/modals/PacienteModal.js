@@ -2,6 +2,7 @@ import React from "react";
 import { FiUser, FiPhone, FiSave, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Swal from "sweetalert2";
 
 function PacienteModal({ isOpen, onClose, onSave, paciente, setPaciente }) {
   if (!isOpen) return null;
@@ -11,7 +12,7 @@ function PacienteModal({ isOpen, onClose, onSave, paciente, setPaciente }) {
     setPaciente((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validación básica
@@ -26,7 +27,55 @@ function PacienteModal({ isOpen, onClose, onSave, paciente, setPaciente }) {
       return;
     }
 
-    onSave();
+    // Mostrar confirmación antes de guardar
+    const result = await Swal.fire({
+      title: paciente.id ? "¿Actualizar paciente?" : "¿Crear nuevo paciente?",
+      html: `
+        <div class="text-left">
+          <p><strong>Nombre:</strong> ${paciente.nombre}</p>
+          <p><strong>Apellido:</strong> ${paciente.apellido}</p>
+          <p><strong>Teléfono:</strong> ${paciente.telefono}</p>
+        </div>
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#0d9488", // teal-600
+      cancelButtonColor: "#6b7280", // gray-500
+      confirmButtonText: paciente.id ? "Sí, actualizar" : "Sí, crear",
+      cancelButtonText: "Cancelar",
+      customClass: {
+        popup: "text-left rounded-lg",
+        confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
+        cancelButton: "px-4 py-2 rounded-md hover:bg-gray-200 transition",
+      },
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await onSave();
+        Swal.fire({
+          title: paciente.id ? "¡Paciente actualizado!" : "¡Paciente creado!",
+          text: `Los datos del paciente se han ${
+            paciente.id ? "actualizado" : "guardado"
+          } correctamente.`,
+          icon: "success",
+          confirmButtonColor: "#0d9488", // teal-600
+          customClass: {
+            confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
+          },
+        });
+        onClose();
+      } catch (error) {
+        Swal.fire({
+          title: "Error",
+          text: `No se pudo ${
+            paciente.id ? "actualizar" : "crear"
+          } el paciente.`,
+          icon: "error",
+          confirmButtonColor: "#0d9488", // teal-600
+        });
+      }
+    }
   };
 
   return (
