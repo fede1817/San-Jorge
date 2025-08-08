@@ -8,6 +8,7 @@ const router = express.Router();
 // Login odontólogo
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
+
   const result = await pool.query(
     "SELECT * FROM odontologos_unificados WHERE email = $1",
     [email]
@@ -21,9 +22,13 @@ router.post("/login", async (req, res) => {
   if (!passwordOk)
     return res.status(401).json({ mensaje: "Contraseña incorrecta" });
 
-  const token = jwt.sign({ id: odontologo.id }, "secreto_super_seguro", {
-    expiresIn: "8h",
-  });
+  // 🟢 Incluir especialidad como rol
+  const token = jwt.sign(
+    { id: odontologo.id, rol: odontologo.especialidad }, // 👈 AQUÍ se incluye el "rol"
+    "secreto_super_seguro",
+    { expiresIn: "8h" }
+  );
+
   res.json({
     token,
     user: {
@@ -36,16 +41,21 @@ router.post("/login", async (req, res) => {
   });
 });
 
-// Registro (opcional)
+// Registro odontólogo
 router.post("/register", async (req, res) => {
   const { nombre, apellido, email, password, matricula, especialidad } =
     req.body;
+
   const hash = await bcrypt.hash(password, 10);
+
   await pool.query(
-    "INSERT INTO odontologos_unificados (nombre, apellido, email, password_hash, matricula, especialidad) VALUES ($1, $2, $3, $4, $5, $6)",
+    `INSERT INTO odontologos_unificados 
+      (nombre, apellido, email, password_hash, matricula, especialidad)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
     [nombre, apellido, email, hash, matricula, especialidad]
   );
-  res.status(201).json({ mensaje: "Odontólogo registrado" });
+
+  res.status(201).json({ mensaje: "Odontólogo registrado correctamente" });
 });
 
 module.exports = router;

@@ -189,6 +189,7 @@ function RegisterPage() {
                 <option value="Cirugía">Cirugía</option>
                 <option value="Estética">Estética</option>
                 <option value="General">General</option>
+                <option value="Administrador">Administrador</option>
               </select>
             </div>
 

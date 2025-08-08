@@ -4,37 +4,77 @@ const verificarToken = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Obtener pacientes del odontólogo autenticado
+// Obtener pacientes (todos si es admin, propios si no)
 router.get("/", verificarToken, async (req, res) => {
   const odontologoId = req.odontologoId;
+  const rol = req.rol;
 
-  const result = await pool.query(
-    `
-  SELECT 
-    p.id, p.nombre, p.apellido, p.telefono,
-    COALESCE(
-      json_agg(
-        jsonb_build_object(
-          'id', t.id,
-          'fecha', t.fecha,
-          'diagnostico', t.diagnostico,
-          'procedimiento', t.procedimiento,
-          'observaciones', t.observaciones,
-          'estado', t.estado,
-          'proxima_consulta', t.proxima_consulta
-        )
-      ) FILTER (WHERE t.id IS NOT NULL), '[]'
-    ) AS tratamientos
-  FROM pacientes p
-  LEFT JOIN tratamientos t ON p.id = t.paciente_id
-  WHERE p.odontologo_id = $1
-  GROUP BY p.id, p.nombre, p.apellido, p.telefono
-  ORDER BY MIN(t.proxima_consulta) ASC
-  `,
-    [odontologoId]
-  );
+  try {
+    let result;
 
-  res.json(result.rows);
+    if (rol === "Administrador") {
+      // Admin: ver todos los pacientes con info del doctor
+      result = await pool.query(`
+        SELECT 
+          p.id, p.nombre, p.apellido, p.telefono, p.email,
+          o.id as doctorId, 
+          CONCAT(o.nombre, ' ', o.apellido) as doctorNombre,
+          COALESCE(
+            json_agg(
+              jsonb_build_object(
+                'id', t.id,
+                'fecha', t.fecha,
+                'diagnostico', t.diagnostico,
+                'procedimiento', t.procedimiento,
+                'observaciones', t.observaciones,
+                'estado', t.estado,
+                'proxima_consulta', t.proxima_consulta
+              )
+            ) FILTER (WHERE t.id IS NOT NULL), '[]'
+          ) AS tratamientos
+        FROM pacientes p
+        LEFT JOIN odontologos_unificados o ON p.odontologo_id = o.id
+        LEFT JOIN tratamientos t ON p.id = t.paciente_id
+        GROUP BY p.id, p.nombre, p.apellido, p.telefono, p.email, o.id
+        ORDER BY MIN(t.proxima_consulta) ASC
+      `);
+    } else {
+      // Odontólogo: ver solo sus pacientes
+      result = await pool.query(
+        `
+        SELECT 
+          p.id, p.nombre, p.apellido, p.telefono, p.email,
+          o.id as doctorId, 
+          CONCAT(o.nombre, ' ', o.apellido) as doctorNombre,
+          COALESCE(
+            json_agg(
+              jsonb_build_object(
+                'id', t.id,
+                'fecha', t.fecha,
+                'diagnostico', t.diagnostico,
+                'procedimiento', t.procedimiento,
+                'observaciones', t.observaciones,
+                'estado', t.estado,
+                'proxima_consulta', t.proxima_consulta
+              )
+            ) FILTER (WHERE t.id IS NOT NULL), '[]'
+          ) AS tratamientos
+        FROM pacientes p
+        LEFT JOIN odontologos_unificados o ON p.odontologo_id = o.id
+        LEFT JOIN tratamientos t ON p.id = t.paciente_id
+        WHERE p.odontologo_id = $1
+        GROUP BY p.id, p.nombre, p.apellido, p.telefono, p.email, o.id
+        ORDER BY MIN(t.proxima_consulta) ASC
+      `,
+        [odontologoId]
+      );
+    }
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error al obtener pacientes:", error);
+    res.status(500).json({ mensaje: "Error al obtener pacientes" });
+  }
 });
 
 // Crear paciente
@@ -62,33 +102,57 @@ router.put("/:id", verificarToken, async (req, res) => {
 
   res.json({ mensaje: "Paciente actualizado" });
 });
-// Rutas para tratamientos/citas
+
+// Ver próximas citas (todas si admin, propias si no)
 router.get("/proximas", verificarToken, async (req, res) => {
+  const odontologoId = req.odontologoId;
+  const rol = req.rol;
+
   try {
-    const result = await pool.query(
-      `
-      SELECT 
-        t.*,
-        p.nombre AS paciente_nombre,
-        p.telefono
-      FROM tratamientos t
-      JOIN pacientes p ON t.paciente_id = p.id
-      WHERE t.fecha >= CURRENT_DATE
-      AND t.odontologo_id = $1
-      ORDER BY 
-        CASE WHEN t.estado = 'programado' THEN 1 ELSE 2 END,
-        t.fecha, 
-        t.hora
-    `,
-      [req.odontologoId] // Cambiado de req.user.id a req.odontologoId
-    );
+    let result;
+
+    if (rol === "Administrador") {
+      result = await pool.query(`
+        SELECT 
+          t.*,
+          p.nombre AS paciente_nombre,
+          p.telefono
+        FROM tratamientos t
+        JOIN pacientes p ON t.paciente_id = p.id
+        WHERE t.fecha >= CURRENT_DATE
+        ORDER BY 
+          CASE WHEN t.estado = 'programado' THEN 1 ELSE 2 END,
+          t.fecha, 
+          t.hora
+      `);
+    } else {
+      result = await pool.query(
+        `
+        SELECT 
+          t.*,
+          p.nombre AS paciente_nombre,
+          p.telefono
+        FROM tratamientos t
+        JOIN pacientes p ON t.paciente_id = p.id
+        WHERE t.fecha >= CURRENT_DATE
+        AND t.odontologo_id = $1
+        ORDER BY 
+          CASE WHEN t.estado = 'programado' THEN 1 ELSE 2 END,
+          t.fecha, 
+          t.hora
+      `,
+        [odontologoId]
+      );
+    }
 
     res.json(result.rows);
   } catch (error) {
+    console.error("Error al obtener próximas citas:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
+// Cambiar estado de tratamiento
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { estado } = req.body;
@@ -103,7 +167,8 @@ router.put("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-// Eliminar paciente
+
+// Eliminar paciente y sus tratamientos
 router.delete("/:id", verificarToken, async (req, res) => {
   const { id } = req.params;
   await pool.query("DELETE FROM tratamientos WHERE paciente_id = $1", [id]);
@@ -111,6 +176,7 @@ router.delete("/:id", verificarToken, async (req, res) => {
   res.json({ mensaje: "Paciente eliminado" });
 });
 
+// Ver tratamientos de un paciente
 router.get("/:id/tratamiento", verificarToken, async (req, res) => {
   const { id } = req.params;
 
@@ -166,7 +232,7 @@ router.post("/:id/tratamiento", verificarToken, async (req, res) => {
   }
 });
 
-// PUT /api/tratamientos/:id/cancelar
+// Cancelar tratamiento
 router.put("/:id/cancelar", async (req, res) => {
   const { id } = req.params;
 
@@ -175,7 +241,7 @@ router.put("/:id/cancelar", async (req, res) => {
       `UPDATE tratamientos 
        SET estado = 'cancelado' 
        WHERE id = $1 
-       RETURNING *`, // Asegúrate de incluir RETURNING
+       RETURNING *`,
       [id]
     );
 
@@ -183,7 +249,7 @@ router.put("/:id/cancelar", async (req, res) => {
       return res.status(404).json({ error: "Cita no encontrada" });
     }
 
-    res.json(result.rows[0]); // Devuelve el registro actualizado
+    res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

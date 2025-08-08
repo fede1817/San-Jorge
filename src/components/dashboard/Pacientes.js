@@ -1,4 +1,12 @@
-import { FiUser, FiPhone, FiCalendar, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { useState, useEffect } from "react";
+import {
+  FiUser,
+  FiPhone,
+  FiCalendar,
+  FiEdit2,
+  FiTrash2,
+  FiSearch,
+} from "react-icons/fi";
 import EmptyState from "./EmptyState";
 import Table from "./Table";
 import Swal from "sweetalert2";
@@ -10,7 +18,40 @@ export default function Pacientes({
   onDelete,
   onViewTreatments,
   formatFecha,
+  isAdmin = false, // Nueva prop para identificar si es admin
+  doctores = [], // Lista de doctores para el filtro
 }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [filteredPacientes, setFilteredPacientes] = useState([]);
+
+  // Filtrar pacientes basado en búsqueda y selección de doctor
+  useEffect(() => {
+    let result = [...pacientes];
+
+    // Filtrar por doctor si está seleccionado y es admin
+    if (isAdmin && selectedDoctor) {
+      result = result.filter(
+        (paciente) => paciente.doctorId === selectedDoctor
+      );
+    }
+
+    // Filtrar por término de búsqueda
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (paciente) =>
+          `${paciente.nombre} ${paciente.apellido}`
+            .toLowerCase()
+            .includes(term) ||
+          paciente.telefono?.toLowerCase().includes(term) ||
+          paciente.email?.toLowerCase().includes(term)
+      );
+    }
+
+    setFilteredPacientes(result);
+  }, [pacientes, searchTerm, selectedDoctor, isAdmin]);
+
   const handleDeleteWithConfirmation = (id, nombreCompleto) => {
     Swal.fire({
       title: "¿Eliminar paciente?",
@@ -29,8 +70,8 @@ export default function Pacientes({
       cancelButtonText: "Cancelar",
       customClass: {
         popup: "text-left",
-        confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition", // Estilo similar a tus botones
-        cancelButton: "px-4 py-2 rounded-md hover:bg-gray-300 transition", // Estilo similar a tus botones
+        confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
+        cancelButton: "px-4 py-2 rounded-md hover:bg-gray-300 transition",
       },
     }).then((result) => {
       if (result.isConfirmed) {
@@ -39,7 +80,7 @@ export default function Pacientes({
           title: "¡Eliminado!",
           text: "El paciente ha sido eliminado correctamente.",
           icon: "success",
-          confirmButtonColor: "#0d9488", // Color teal-600
+          confirmButtonColor: "#0d9488",
           customClass: {
             confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
           },
@@ -56,15 +97,6 @@ export default function Pacientes({
     );
   }
 
-  if (pacientes.length === 0) {
-    return (
-      <EmptyState
-        icon={<FiUser size={48} />}
-        title="No hay pacientes registrados"
-      />
-    );
-  }
-
   const columns = [
     {
       header: "Paciente",
@@ -77,6 +109,11 @@ export default function Pacientes({
             <div className="text-sm font-medium text-gray-900">
               {row.nombre} {row.apellido}
             </div>
+            {isAdmin && row.doctorNombre && (
+              <div className="text-xs text-gray-500">
+                Doctor: {row.doctorNombre}
+              </div>
+            )}
           </div>
         </div>
       ),
@@ -156,5 +193,54 @@ export default function Pacientes({
     },
   ];
 
-  return <Table data={pacientes} columns={columns} />;
+  return (
+    <div className="space-y-4">
+      {/* Barra de búsqueda y filtros */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-1/2">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FiSearch className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+            placeholder="Buscar pacientes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {isAdmin && (
+          <div className="w-full md:w-1/3">
+            <select
+              className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md"
+              value={selectedDoctor}
+              onChange={(e) => setSelectedDoctor(e.target.value)}
+            >
+              <option value="">Todos los doctores</option>
+              {doctores.map((doctor) => (
+                <option key={doctor.id} value={doctor.id}>
+                  {doctor.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* Tabla de pacientes */}
+      {filteredPacientes.length === 0 ? (
+        <EmptyState
+          icon={<FiUser size={48} />}
+          title={
+            searchTerm || selectedDoctor
+              ? "No se encontraron resultados"
+              : "No hay pacientes registrados"
+          }
+        />
+      ) : (
+        <Table data={filteredPacientes} columns={columns} isAdmin={isAdmin} />
+      )}
+    </div>
+  );
 }
