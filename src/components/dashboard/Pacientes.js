@@ -32,7 +32,7 @@ export default function Pacientes({
     // Filtrar por doctor si está seleccionado y es admin
     if (isAdmin && selectedDoctor) {
       result = result.filter(
-        (paciente) => paciente.doctorId === selectedDoctor
+        (paciente) => paciente.doctorId == selectedDoctor // Usar == en lugar de ===
       );
     }
 

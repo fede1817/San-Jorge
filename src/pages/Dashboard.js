@@ -45,7 +45,15 @@ export default function Dashboard() {
 
       if (!res.ok) throw new Error("Error al cargar pacientes");
       const data = await res.json();
-      setPacientes(data);
+
+      // Normaliza los nombres de propiedades
+      const normalizedData = data.map((paciente) => ({
+        ...paciente,
+        doctorId: paciente.doctorid || paciente.doctorId,
+        doctorNombre: paciente.doctornombre || paciente.doctorNombre,
+      }));
+
+      setPacientes(normalizedData);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -189,6 +197,26 @@ export default function Dashboard() {
     navigate("/");
   };
 
+  const obtenerListaDoctores = (pacientes) => {
+    const doctoresUnicos = [];
+    const idsVistos = new Set();
+
+    pacientes.forEach((paciente) => {
+      const doctorId = paciente.doctorId || paciente.doctorid;
+      const doctorNombre = paciente.doctorNombre || paciente.doctornombre;
+
+      if (doctorId && !idsVistos.has(doctorId)) {
+        doctoresUnicos.push({
+          id: doctorId,
+          nombre: doctorNombre || `Doctor ${doctorId}`,
+        });
+        idsVistos.add(doctorId);
+      }
+    });
+
+    return doctoresUnicos;
+  };
+
   // Formateadores
   const formatFecha = (fechaString) => {
     if (!fechaString) return "No registrada";
@@ -264,6 +292,9 @@ export default function Dashboard() {
                     setVerModalOpen(true);
                   }}
                   formatFecha={formatFecha}
+                  isAdmin={userData?.especialidad === "Administrador"} // Asegúrate que esto coincida con tu lógica de roles
+                  doctores={obtenerListaDoctores(pacientes)}
+                  // Necesitas obtener esta lista de doctores
                 />
               </>
             ) : (

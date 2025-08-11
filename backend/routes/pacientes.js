@@ -15,29 +15,29 @@ router.get("/", verificarToken, async (req, res) => {
     if (rol === "Administrador") {
       // Admin: ver todos los pacientes con info del doctor
       result = await pool.query(`
-        SELECT 
-          p.id, p.nombre, p.apellido, p.telefono, p.email,
-          o.id as doctorId, 
-          CONCAT(o.nombre, ' ', o.apellido) as doctorNombre,
-          COALESCE(
-            json_agg(
-              jsonb_build_object(
-                'id', t.id,
-                'fecha', t.fecha,
-                'diagnostico', t.diagnostico,
-                'procedimiento', t.procedimiento,
-                'observaciones', t.observaciones,
-                'estado', t.estado,
-                'proxima_consulta', t.proxima_consulta
-              )
-            ) FILTER (WHERE t.id IS NOT NULL), '[]'
-          ) AS tratamientos
-        FROM pacientes p
-        LEFT JOIN odontologos_unificados o ON p.odontologo_id = o.id
-        LEFT JOIN tratamientos t ON p.id = t.paciente_id
-        GROUP BY p.id, p.nombre, p.apellido, p.telefono, p.email, o.id
-        ORDER BY MIN(t.proxima_consulta) ASC
-      `);
+  SELECT 
+    p.id, p.nombre, p.apellido, p.telefono, p.email,
+    o.id as "doctorId", 
+    CONCAT(o.nombre, ' ', o.apellido) as "doctorNombre",
+    COALESCE(
+      json_agg(
+        jsonb_build_object(
+          'id', t.id,
+          'fecha', t.fecha,
+          'diagnostico', t.diagnostico,
+          'procedimiento', t.procedimiento,
+          'observaciones', t.observaciones,
+          'estado', t.estado,
+          'proxima_consulta', t.proxima_consulta
+        )
+      ) FILTER (WHERE t.id IS NOT NULL), '[]'
+    ) AS tratamientos
+  FROM pacientes p
+  LEFT JOIN odontologos_unificados o ON p.odontologo_id = o.id
+  LEFT JOIN tratamientos t ON p.id = t.paciente_id
+  GROUP BY p.id, p.nombre, p.apellido, p.telefono, p.email, o.id
+  ORDER BY MIN(t.proxima_consulta) ASC
+`);
     } else {
       // Odontólogo: ver solo sus pacientes
       result = await pool.query(
