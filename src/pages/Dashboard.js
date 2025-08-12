@@ -21,6 +21,7 @@ import CitaModal from "../components/modals/CitaModal";
 export default function Dashboard() {
   // Estados principales
   const [pacientes, setPacientes] = useState([]);
+  const [doctores, setListaDoctores] = useState([]);
   const [citas, setCitas] = useState([]);
   const [loading, setLoading] = useState({ pacientes: true, citas: true });
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -77,15 +78,45 @@ export default function Dashboard() {
       setLoading((prev) => ({ ...prev, citas: false }));
     }
   };
+  const fetchDoctores = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:3001/api/pacientes/doctores", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Error al cargar doctores");
+      const data = await res.json();
+      setListaDoctores(data);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   // Funciones de manejo
   const handleSavePaciente = async () => {
     try {
       const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user"));
       const metodo = currentPaciente.id ? "PUT" : "POST";
       const url = currentPaciente.id
         ? `http://localhost:3001/api/pacientes/${currentPaciente.id}`
         : "http://localhost:3001/api/pacientes";
+
+      // Preparar datos a enviar
+      const datosPaciente = {
+        nombre: currentPaciente.nombre,
+        apellido: currentPaciente.apellido,
+        telefono: currentPaciente.telefono,
+      };
+
+      // Si es admin y hay doctor seleccionado, incluir odontologo_id
+      if (
+        user?.especialidad === "Administrador" &&
+        currentPaciente.odontologo_id
+      ) {
+        datosPaciente.odontologo_id = currentPaciente.odontologo_id;
+      }
 
       const res = await fetch(url, {
         method: metodo,
@@ -93,13 +124,10 @@ export default function Dashboard() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(currentPaciente),
+        body: JSON.stringify(datosPaciente),
       });
 
-      if (!res.ok)
-        throw new Error(
-          currentPaciente.id ? "Error al actualizar" : "Error al crear"
-        );
+      if (!res.ok) throw new Error(res.statusText);
 
       toast.success(
         currentPaciente.id ? "Paciente actualizado" : "Paciente creado"
@@ -233,6 +261,7 @@ export default function Dashboard() {
   };
 
   // Efectos iniciales
+  // En el useEffect principal, añade:
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
@@ -245,7 +274,14 @@ export default function Dashboard() {
     setUserData(user);
     fetchPacientes();
     fetchCitas();
+
+    // Solo cargar doctores completos si es admin
+    if (user.especialidad === "Administrador") {
+      fetchDoctores();
+    }
   }, [navigate]);
+
+  // Elimina la función obtenerListaDoctores ya que no la necesitaremos
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -292,9 +328,8 @@ export default function Dashboard() {
                     setVerModalOpen(true);
                   }}
                   formatFecha={formatFecha}
-                  isAdmin={userData?.especialidad === "Administrador"} // Asegúrate que esto coincida con tu lógica de roles
-                  doctores={obtenerListaDoctores(pacientes)}
-                  // Necesitas obtener esta lista de doctores
+                  isAdmin={userData?.especialidad === "Administrador"}
+                  doctores={doctores} // Ahora pasamos la lista completa de doctores
                 />
               </>
             ) : (
@@ -338,6 +373,8 @@ export default function Dashboard() {
         onSave={handleSavePaciente}
         paciente={currentPaciente}
         setPaciente={setCurrentPaciente}
+        isAdmin={userData?.especialidad === "Administrador"}
+        doctores={doctores} // Lista completa de doctores
       />
 
       {pacienteParaVer && (

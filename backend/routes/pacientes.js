@@ -77,32 +77,76 @@ router.get("/", verificarToken, async (req, res) => {
   }
 });
 
+router.get("/doctores", verificarToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        id,
+        CONCAT(nombre, ' ', apellido) as nombre,
+        especialidad,
+        email,
+        matricula
+      FROM odontologos_unificados
+      ORDER BY nombre ASC
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error al obtener doctores:", error);
+    res.status(500).json({ mensaje: "Error al obtener doctores" });
+  }
+});
 // Crear paciente
+// Crear paciente (POST)
 router.post("/", verificarToken, async (req, res) => {
   const odontologoId = req.odontologoId;
-  const { nombre, apellido, telefono } = req.body;
+  const rol = req.rol;
+  const { nombre, apellido, telefono, odontologo_id } = req.body;
 
-  await pool.query(
-    "INSERT INTO pacientes (nombre, apellido, telefono, odontologo_id) VALUES ($1, $2, $3, $4)",
-    [nombre, apellido, telefono, odontologoId]
-  );
+  // Determinar el odontólogo asignado
+  const odontologoAsignado =
+    rol === "Administrador" && odontologo_id ? odontologo_id : odontologoId;
 
-  res.status(201).json({ mensaje: "Paciente creado" });
+  try {
+    await pool.query(
+      "INSERT INTO pacientes (nombre, apellido, telefono, odontologo_id) VALUES ($1, $2, $3, $4)",
+      [nombre, apellido, telefono, odontologoAsignado]
+    );
+
+    res.status(201).json({ mensaje: "Paciente creado" });
+  } catch (error) {
+    console.error("Error al crear paciente:", error);
+    res.status(500).json({ mensaje: "Error al crear paciente" });
+  }
 });
 
-// Actualizar paciente
+// Actualizar paciente (PUT)
 router.put("/:id", verificarToken, async (req, res) => {
-  const { nombre, apellido, telefono } = req.body;
+  const rol = req.rol;
+  const { nombre, apellido, telefono, odontologo_id } = req.body;
   const { id } = req.params;
 
-  await pool.query(
-    "UPDATE pacientes SET nombre=$1, apellido=$2, telefono=$3 WHERE id=$4",
-    [nombre, apellido, telefono, id]
-  );
+  try {
+    if (rol === "Administrador") {
+      // Admin puede cambiar el doctor asignado
+      await pool.query(
+        "UPDATE pacientes SET nombre=$1, apellido=$2, telefono=$3, odontologo_id=$4 WHERE id=$5",
+        [nombre, apellido, telefono, odontologo_id, id]
+      );
+    } else {
+      // Odontólogo normal solo puede actualizar datos básicos
+      await pool.query(
+        "UPDATE pacientes SET nombre=$1, apellido=$2, telefono=$3 WHERE id=$4",
+        [nombre, apellido, telefono, id]
+      );
+    }
 
-  res.json({ mensaje: "Paciente actualizado" });
+    res.json({ mensaje: "Paciente actualizado" });
+  } catch (error) {
+    console.error("Error al actualizar paciente:", error);
+    res.status(500).json({ mensaje: "Error al actualizar paciente" });
+  }
 });
-
 // Ver próximas citas (todas si admin, propias si no)
 router.get("/proximas", verificarToken, async (req, res) => {
   const odontologoId = req.odontologoId;

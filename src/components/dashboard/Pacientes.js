@@ -10,6 +10,7 @@ import {
 import EmptyState from "./EmptyState";
 import Table from "./Table";
 import Swal from "sweetalert2";
+import DoctorSelect from "../ui/DoctorSelect";
 
 export default function Pacientes({
   pacientes,
@@ -31,9 +32,7 @@ export default function Pacientes({
 
     // Filtrar por doctor si está seleccionado y es admin
     if (isAdmin && selectedDoctor) {
-      result = result.filter(
-        (paciente) => paciente.doctorId == selectedDoctor // Usar == en lugar de ===
-      );
+      result = result.filter((paciente) => paciente.doctorId == selectedDoctor);
     }
 
     // Filtrar por término de búsqueda
@@ -212,18 +211,11 @@ export default function Pacientes({
 
         {isAdmin && (
           <div className="w-full md:w-1/3">
-            <select
-              className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md"
+            <DoctorSelect
+              doctores={doctores}
               value={selectedDoctor}
-              onChange={(e) => setSelectedDoctor(e.target.value)}
-            >
-              <option value="">Todos los doctores</option>
-              {doctores.map((doctor) => (
-                <option key={doctor.id} value={doctor.id}>
-                  {doctor.nombre}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedDoctor}
+            />
           </div>
         )}
       </div>

@@ -3,13 +3,26 @@ import { FiUser, FiPhone, FiSave, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+import DoctorSelect from "../ui/DoctorSelect"; // Importa el componente que creamos antes
 
-function PacienteModal({ isOpen, onClose, onSave, paciente, setPaciente }) {
+function PacienteModal({
+  isOpen,
+  onClose,
+  onSave,
+  paciente,
+  setPaciente,
+  isAdmin = false,
+  doctores = [],
+}) {
   if (!isOpen) return null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPaciente((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleDoctorChange = (doctorId) => {
+    setPaciente((prev) => ({ ...prev, odontologo_id: doctorId }));
   };
 
   const handleSubmit = async (e) => {
@@ -35,12 +48,20 @@ function PacienteModal({ isOpen, onClose, onSave, paciente, setPaciente }) {
           <p><strong>Nombre:</strong> ${paciente.nombre}</p>
           <p><strong>Apellido:</strong> ${paciente.apellido}</p>
           <p><strong>Teléfono:</strong> ${paciente.telefono}</p>
+          ${
+            isAdmin
+              ? `<p><strong>Doctor asignado:</strong> ${
+                  doctores.find((d) => d.id == paciente.odontologo_id)
+                    ?.nombre || "No asignado"
+                }</p>`
+              : ""
+          }
         </div>
       `,
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#0d9488", // teal-600
-      cancelButtonColor: "#6b7280", // gray-500
+      confirmButtonColor: "#0d9488",
+      cancelButtonColor: "#6b7280",
       confirmButtonText: paciente.id ? "Sí, actualizar" : "Sí, crear",
       cancelButtonText: "Cancelar",
       customClass: {
@@ -59,7 +80,7 @@ function PacienteModal({ isOpen, onClose, onSave, paciente, setPaciente }) {
             paciente.id ? "actualizado" : "guardado"
           } correctamente.`,
           icon: "success",
-          confirmButtonColor: "#0d9488", // teal-600
+          confirmButtonColor: "#0d9488",
           customClass: {
             confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
           },
@@ -72,7 +93,7 @@ function PacienteModal({ isOpen, onClose, onSave, paciente, setPaciente }) {
             paciente.id ? "actualizar" : "crear"
           } el paciente.`,
           icon: "error",
-          confirmButtonColor: "#0d9488", // teal-600
+          confirmButtonColor: "#0d9488",
         });
       }
     }
@@ -93,6 +114,20 @@ function PacienteModal({ isOpen, onClose, onSave, paciente, setPaciente }) {
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
             <div>
+              {isAdmin && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Asignar a Doctor
+                  </label>
+                  <DoctorSelect
+                    doctores={doctores}
+                    value={paciente.odontologo_id || null}
+                    onChange={handleDoctorChange}
+                    showLabel={false}
+                    placeholder="Seleccionar doctor"
+                  />
+                </div>
+              )}
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nombre *
               </label>
