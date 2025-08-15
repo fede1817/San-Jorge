@@ -108,11 +108,6 @@ export default function Pacientes({
             <div className="text-sm font-medium text-gray-900">
               {row.nombre} {row.apellido}
             </div>
-            {isAdmin && row.doctorNombre && (
-              <div className="text-xs text-gray-500">
-                Doctor: {row.doctorNombre}
-              </div>
-            )}
           </div>
         </div>
       ),

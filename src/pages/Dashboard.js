@@ -360,6 +360,8 @@ export default function Dashboard() {
                   onCancel={handleCancelCita}
                   formatFecha={formatFecha}
                   formatHora={formatHora}
+                  isAdmin={userData?.especialidad === "Administrador"}
+                  doctores={doctores}
                 />
               </>
             )}
@@ -395,6 +397,8 @@ export default function Dashboard() {
         onSave={handleSaveCita}
         pacientes={pacientes}
         odontologoId={userData?.id}
+        isAdmin={userData?.especialidad === "Administrador"}
+        doctores={doctores}
       />
     </div>
   );

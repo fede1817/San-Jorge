@@ -87,7 +87,6 @@ function SearchableSelect({ pacientes, value, onChange }) {
                 <div className="font-medium">
                   {paciente.nombre} {paciente.apellido}
                 </div>
-                <div className="text-sm text-gray-600">{paciente.telefono}</div>
               </div>
             ))
           ) : (

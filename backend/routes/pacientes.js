@@ -160,9 +160,13 @@ router.get("/proximas", verificarToken, async (req, res) => {
         SELECT 
           t.*,
           p.nombre AS paciente_nombre,
-          p.telefono
+          p.apellido AS paciente_apellido,
+          p.telefono,
+          o.id AS odontologo_id,
+          CONCAT(o.nombre, ' ', o.apellido) AS odontologo_nombre
         FROM tratamientos t
         JOIN pacientes p ON t.paciente_id = p.id
+        LEFT JOIN odontologos_unificados o ON t.odontologo_id = o.id
         WHERE t.fecha >= CURRENT_DATE
         ORDER BY 
           CASE WHEN t.estado = 'programado' THEN 1 ELSE 2 END,
@@ -175,9 +179,13 @@ router.get("/proximas", verificarToken, async (req, res) => {
         SELECT 
           t.*,
           p.nombre AS paciente_nombre,
-          p.telefono
+          p.apellido AS paciente_apellido,
+          p.telefono,
+          o.id AS odontologo_id,
+          CONCAT(o.nombre, ' ', o.apellido) AS odontologo_nombre
         FROM tratamientos t
         JOIN pacientes p ON t.paciente_id = p.id
+        LEFT JOIN odontologos_unificados o ON t.odontologo_id = o.id
         WHERE t.fecha >= CURRENT_DATE
         AND t.odontologo_id = $1
         ORDER BY 
@@ -240,7 +248,8 @@ router.get("/:id/tratamiento", verificarToken, async (req, res) => {
 // Agregar tratamiento a un paciente
 router.post("/:id/tratamiento", verificarToken, async (req, res) => {
   const pacienteId = req.params.id;
-  const odontologoId = req.odontologoId;
+  const odontologoTokenId = req.odontologoId; // ID del token
+  const rol = req.rol; // Obtenemos el rol del usuario
   const {
     fecha,
     diagnostico,
@@ -249,7 +258,14 @@ router.post("/:id/tratamiento", verificarToken, async (req, res) => {
     estado,
     proxima_consulta,
     hora,
+    odontologo_id, // ID que viene del frontend (solo para admins)
   } = req.body;
+
+  // Determinar qué odontólogo_id usar
+  const odontologoAsignado =
+    rol === "Administrador" && odontologo_id
+      ? odontologo_id
+      : odontologoTokenId;
 
   try {
     await pool.query(
@@ -258,7 +274,7 @@ router.post("/:id/tratamiento", verificarToken, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         pacienteId,
-        odontologoId,
+        odontologoAsignado, // Usamos el odontólogo determinado
         fecha,
         diagnostico,
         procedimiento,

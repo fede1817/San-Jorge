@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiClock, FiUser, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import SearchableSelect from "../ui/SearchableSelect";
+import DoctorSelect from "../ui/DoctorSelect";
 
 export default function CitaModal({
   isOpen,
@@ -12,6 +13,8 @@ export default function CitaModal({
   onSave,
   pacientes,
   odontologoId,
+  isAdmin = false,
+  doctores = [],
 }) {
   const [cita, setCita] = useState({
     paciente_id: "",
@@ -21,6 +24,25 @@ export default function CitaModal({
     estado: "programado",
     odontologo_id: odontologoId,
   });
+  const [pacientesFiltrados, setPacientesFiltrados] = useState([]);
+  useEffect(() => {
+    if (isAdmin && cita.odontologo_id) {
+      const pacientesDelDoctor = pacientes.filter(
+        (p) => p.doctorId == cita.odontologo_id
+      );
+      setPacientesFiltrados(pacientesDelDoctor);
+
+      // Resetear paciente seleccionado si no está en la nueva lista
+      if (
+        cita.paciente_id &&
+        !pacientesDelDoctor.some((p) => p.id == cita.paciente_id)
+      ) {
+        setCita((prev) => ({ ...prev, paciente_id: "" }));
+      }
+    } else {
+      setPacientesFiltrados(pacientes);
+    }
+  }, [cita.odontologo_id, pacientes, isAdmin]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,13 +53,27 @@ export default function CitaModal({
     }
 
     // Mostrar confirmación antes de guardar
+    const pacienteSeleccionado = pacientes.find(
+      (p) => p.id === cita.paciente_id
+    );
+    const doctorAsignado = isAdmin
+      ? doctores.find((d) => d.id == cita.odontologo_id)?.nombre
+      : null;
+
     const result = await Swal.fire({
       title: "¿Confirmar cita?",
       html: `
         <div class="text-left">
-          <p><strong>Paciente:</strong> ${
-            pacientes.find((p) => p.id === cita.paciente_id)?.nombre || ""
-          }</p>
+          <p><strong>Paciente:</strong> ${pacienteSeleccionado?.nombre || ""} ${
+        pacienteSeleccionado?.apellido || ""
+      }</p>
+          ${
+            isAdmin
+              ? `<p><strong>Doctor asignado:</strong> ${
+                  doctorAsignado || "No asignado"
+                }</p>`
+              : ""
+          }
           <p><strong>Fecha:</strong> ${cita.fecha.toLocaleDateString()}</p>
           <p><strong>Hora:</strong> ${cita.hora}</p>
           ${
@@ -49,8 +85,8 @@ export default function CitaModal({
       `,
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#0d9488", // teal-600
-      cancelButtonColor: "#6b7280", // gray-500
+      confirmButtonColor: "#0d9488",
+      cancelButtonColor: "#6b7280",
       confirmButtonText: "Sí, agendar",
       cancelButtonText: "Cancelar",
       customClass: {
@@ -64,9 +100,11 @@ export default function CitaModal({
       const citaParaEnviar = {
         ...cita,
         fecha: cita.fecha.toISOString().split("T")[0],
-        odontologo_id: odontologoId,
+        // Usar el odontologo_id seleccionado o el del usuario logueado
+        odontologo_id: isAdmin ? cita.odontologo_id : odontologoId,
       };
 
+      // Resetear el formulario
       setCita({
         paciente_id: "",
         fecha: new Date(),
@@ -82,7 +120,7 @@ export default function CitaModal({
           title: "¡Cita agendada!",
           text: "La cita se ha programado correctamente.",
           icon: "success",
-          confirmButtonColor: "#0d9488", // teal-600
+          confirmButtonColor: "#0d9488",
           customClass: {
             confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
           },
@@ -93,10 +131,14 @@ export default function CitaModal({
           title: "Error",
           text: "No se pudo agendar la cita.",
           icon: "error",
-          confirmButtonColor: "#0d9488", // teal-600
+          confirmButtonColor: "#0d9488",
         });
       }
     }
+  };
+
+  const handleDoctorChange = (doctorId) => {
+    setCita((prev) => ({ ...prev, odontologo_id: doctorId }));
   };
 
   if (!isOpen) return null;
@@ -114,42 +156,64 @@ export default function CitaModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {isAdmin && (
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-1">
+                Asignar a Doctor *
+              </label>
+              <DoctorSelect
+                doctores={doctores}
+                value={cita.odontologo_id}
+                onChange={handleDoctorChange}
+                showLabel={false}
+              />
+            </div>
+          )}
+
           <SearchableSelect
-            pacientes={pacientes}
+            pacientes={isAdmin ? pacientesFiltrados : pacientes}
             value={cita.paciente_id}
             onChange={(pacienteId) =>
               setCita({ ...cita, paciente_id: pacienteId })
             }
+            disabled={isAdmin && !cita.odontologo_id}
+            placeholder={
+              isAdmin && !cita.odontologo_id
+                ? "Seleccione un doctor primero"
+                : "Buscar paciente"
+            }
           />
 
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Fecha *
-            </label>
-            <DatePicker
-              selected={cita.fecha}
-              onChange={(date) => setCita({ ...cita, fecha: date })}
-              minDate={new Date()}
-              className="w-full p-2 border rounded"
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-1">
+                Fecha *
+              </label>
+              <DatePicker
+                selected={cita.fecha}
+                onChange={(date) => setCita({ ...cita, fecha: date })}
+                minDate={new Date()}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-1">
+                Hora *
+              </label>
+              <input
+                type="time"
+                value={cita.hora}
+                onChange={(e) => setCita({ ...cita, hora: e.target.value })}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Hora *
-            </label>
-            <input
-              type="time"
-              value={cita.hora}
-              onChange={(e) => setCita({ ...cita, hora: e.target.value })}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-
-          <div className="mb-4">
+          <div>
             <label className="block text-gray-700 text-sm font-medium mb-1">
               Procedimiento
             </label>
@@ -164,7 +228,7 @@ export default function CitaModal({
             />
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-4">
             <button
               type="button"
               onClick={onClose}

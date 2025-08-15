@@ -9,12 +9,6 @@ export default function StatsCards({ pacientes, citas }) {
         <h3 className="text-gray-500 text-sm font-medium">Próximas Citas</h3>
         <p className="text-2xl font-bold text-blue-600">{citas.length}</p>
       </div>
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-gray-500 text-sm font-medium">
-          Tratamientos Activos
-        </h3>
-        <p className="text-2xl font-bold text-amber-600">-</p>
-      </div>
     </div>
   );
 }
