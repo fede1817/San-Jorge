@@ -5,7 +5,7 @@
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.5
 
--- Started on 2025-08-03 13:47:19
+-- Started on 2025-08-15 13:20:44
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -197,6 +197,7 @@ COPY public.odontologos_unificados (id, nombre, apellido, email, password_hash, 
 7	jose 	cardozo	jose@gmail.com	$2b$10$KLPfaYV2aiq6WUxesCvG7e9Vf1hbGjiET2RJ0NdI2d/9rBSzbjil6	neurologo	4150902	2025-07-28 14:54:20.494568
 8	jane	doe	german@gmail.com	$2b$10$s/on8INPrduENTOBF06u2.SxFn5LBaZ5qYLnU5xA/RAeet7VVY49S	Endodoncia	5150902	2025-07-31 10:13:37.006683
 9	Arnaldo	zoilan	l@gmail.com	$2b$10$evNeA2yJHzHE9Uso1wDxY.SlNDqIfHeABKTX9kj5vE96KiDq0Aupm	Cirugía	5150902	2025-07-31 10:16:32.071063
+11	Naira	David	naira.david@sanjorge.com	$2b$10$MaMhgUZtkmVavLI5RSSdGeHVkSquayexmomo94fpEOeDW0VQMZ5Lq	Administrador	12345678	2025-08-08 09:54:27.291994
 \.
 
 
@@ -209,9 +210,12 @@ COPY public.odontologos_unificados (id, nombre, apellido, email, password_hash, 
 COPY public.pacientes (id, nombre, apellido, cedula, fecha_nacimiento, telefono, email, odontologo_id) FROM stdin;
 8	german	cano	\N	\N	0974551151	\N	7
 9	ariel 	zoilan	\N	\N	097455156	\N	7
-20	Arnaldo	cano	\N	\N	0974551151	\N	1
-25	german	dasilva	\N	\N	0974777777	\N	3
-27	JOSE	zoilan	\N	\N	0974551151	\N	1
+28	Néstor	zavala1	\N	\N	0974551151	\N	1
+32	jose	samudio	\N	\N	1223255554	\N	1
+33	Arnaldo	gimenes	\N	\N	0974551151	\N	1
+37	JOEL	RIVEROS	\N	\N	0974551156	\N	1
+39	JOSE	CARDOZO	\N	\N	0974777777	\N	1
+40	ARTURO 	FERNANDEZ	\N	\N	0974777777	\N	1
 \.
 
 
@@ -224,16 +228,13 @@ COPY public.pacientes (id, nombre, apellido, cedula, fecha_nacimiento, telefono,
 COPY public.tratamientos (id, paciente_id, odontologo_id, fecha, diagnostico, procedimiento, observaciones, estado, proxima_consulta, hora, motivo) FROM stdin;
 5	8	7	2025-07-28	dfd	dasdad	asdadasdasdad	sdadasdsasda	2025-07-31	\N	\N
 6	9	7	2025-07-23	dfd	dsa	asda	sdasdsadasdada	2025-07-31	\N	\N
-24	20	1	2025-07-30	perdida de incicivos	extraccion		muerto	2025-08-06	\N	\N
-25	20	1	2025-07-29	perdida de incicivos	cogida		sdasdsadasdada	2025-07-31	\N	\N
-26	20	1	2025-07-31	perdida de incicivos	extraccion		muerto	2025-08-02	\N	\N
-27	20	1	2025-07-30	pilpitis	extraccion		sdadasdsasda	2025-08-02	\N	\N
-28	20	1	2025-07-30	cancer	cogida		dgfd	2025-08-09	\N	\N
-30	20	1	2025-08-03	\N	fsdff	\N	cancelado	\N	\N	\N
-33	27	1	2025-09-26	\N	hola2	\N	cancelado	\N	\N	\N
-32	27	1	2025-08-03	\N	fdsaf	\N	cancelado	\N	\N	\N
-31	27	1	2025-08-03	\N	HOLA	\N	cancelado	\N	\N	\N
-34	27	1	2025-08-23	\N	dolores	\N	cancelado	\N	\N	\N
+40	28	1	2025-08-30	\N		\N	cancelado	\N	09:00:00	\N
+43	28	1	2025-08-05	\N		\N	cancelado	\N	09:00:00	\N
+44	28	1	2025-08-07	\N	hola	\N	cancelado	\N	09:00:00	\N
+46	28	1	2025-08-07	\N	sada	\N	cancelado	\N	09:00:00	\N
+47	28	1	2025-08-07	\N	sdadsf	\N	cancelado	\N	09:00:00	\N
+49	33	1	2025-08-08	\N	hipo	\N	programado	\N	09:00:00	\N
+50	32	1	2025-08-08	\N	asda	\N	programado	\N	09:00:00	\N
 \.
 
 
@@ -243,7 +244,7 @@ COPY public.tratamientos (id, paciente_id, odontologo_id, fecha, diagnostico, pr
 -- Name: odontologos_unificados_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 9, true);
+SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 11, true);
 
 
 --
@@ -252,7 +253,7 @@ SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 9, true);
 -- Name: pacientes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.pacientes_id_seq', 27, true);
+SELECT pg_catalog.setval('public.pacientes_id_seq', 40, true);
 
 
 --
@@ -261,7 +262,7 @@ SELECT pg_catalog.setval('public.pacientes_id_seq', 27, true);
 -- Name: tratamientos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tratamientos_id_seq', 34, true);
+SELECT pg_catalog.setval('public.tratamientos_id_seq', 50, true);
 
 
 --
@@ -336,7 +337,7 @@ ALTER TABLE ONLY public.tratamientos
     ADD CONSTRAINT tratamientos_paciente_id_fkey FOREIGN KEY (paciente_id) REFERENCES public.pacientes(id);
 
 
--- Completed on 2025-08-03 13:47:19
+-- Completed on 2025-08-15 13:20:44
 
 --
 -- PostgreSQL database dump complete
