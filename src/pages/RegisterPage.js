@@ -130,7 +130,7 @@ function RegisterPage() {
               <input
                 name="email"
                 type="email"
-                placeholder="juan.perez@clinica.com"
+                placeholder="juan.perez@sanjorge.com"
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
