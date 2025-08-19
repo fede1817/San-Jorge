@@ -1,10 +1,17 @@
 import { useState, useEffect } from "react";
-import { FiUser, FiX, FiSearch, FiCalendar } from "react-icons/fi";
 import EmptyState from "./EmptyState";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import Table from "./Table";
 import DoctorSelect from "../ui/DoctorSelect";
 import Swal from "sweetalert2";
+import {
+  FiUser,
+  FiX,
+  FiSearch,
+  FiCalendar,
+  FiEdit2,
+  FiTrash2,
+} from "react-icons/fi";
 
 export default function Citas({
   citas,
@@ -13,10 +20,39 @@ export default function Citas({
   formatHora,
   isAdmin = false,
   doctores = [],
+  onEdit,
+  onDelete,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [filteredCitas, setFilteredCitas] = useState([]);
+
+  const handleDeleteWithConfirmation = (
+    id,
+    pacienteNombre,
+    pacienteApellido
+  ) => {
+    Swal.fire({
+      title: "¿Eliminar cita?",
+      html: `
+      <div class="text-left">
+        <p>Estás a punto de eliminar la cita de:</p>
+        <p class="font-bold">${pacienteNombre} ${pacienteApellido}</p>
+        <p class="text-red-600 mt-2">¡Esta acción no se puede deshacer!</p>
+      </div>
+    `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#0d9488",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onDelete(id);
+      }
+    });
+  };
 
   // Filtrar citas basado en búsqueda y selección de doctor
   useEffect(() => {
@@ -102,6 +138,30 @@ export default function Citas({
     },
     {
       header: "Acciones",
+      render: (_, row) => (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => onEdit(row)}
+            className="text-amber-600 hover:text-amber-800 p-1"
+            title="Editar cita"
+          >
+            <FiEdit2 size={18} />
+          </button>
+          <button
+            onClick={() =>
+              handleDeleteWithConfirmation(
+                row.id,
+                row.paciente_nombre,
+                row.paciente_apellido
+              )
+            }
+            className="text-red-600 hover:text-red-800 p-1"
+            title="Eliminar cita"
+          >
+            <FiTrash2 size={18} />
+          </button>
+        </div>
+      ),
     },
   ];
 

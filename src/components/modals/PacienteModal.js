@@ -1,9 +1,9 @@
-import React from "react";
-import { FiUser, FiPhone, FiSave, FiX } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import { FiUser, FiPhone, FiSave, FiX, FiMail } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
-import DoctorSelect from "../ui/DoctorSelect"; // Importa el componente que creamos antes
+import DoctorSelect from "../ui/DoctorSelect";
 
 function PacienteModal({
   isOpen,
@@ -14,15 +14,25 @@ function PacienteModal({
   isAdmin = false,
   doctores = [],
 }) {
-  if (!isOpen) return null;
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+
+  // Efecto para sincronizar el doctor seleccionado con los datos del paciente
+  useEffect(() => {
+    if (paciente && paciente.odontologo_id) {
+      setSelectedDoctor(paciente.odontologo_id.toString());
+    } else {
+      setSelectedDoctor(null);
+    }
+  }, [paciente, isOpen]);
+
+  const handleDoctorChange = (doctorId) => {
+    setSelectedDoctor(doctorId);
+    setPaciente((prev) => ({ ...prev, odontologo_id: doctorId }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPaciente((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleDoctorChange = (doctorId) => {
-    setPaciente((prev) => ({ ...prev, odontologo_id: doctorId }));
   };
 
   const handleSubmit = async (e) => {
@@ -30,17 +40,28 @@ function PacienteModal({
 
     // Validación básica
     if (!paciente.nombre || !paciente.apellido || !paciente.telefono) {
-      toast.warn("Todos los campos son obligatorios");
+      toast.warn("Nombre, apellido y teléfono son obligatorios");
       return;
     }
 
     // Validación de teléfono
-    if (!/^[0-9]{10,15}$/.test(paciente.telefono)) {
+    if (!/^[0-9]{10,15}$/.test(paciente.telefono.replace(/\D/g, ""))) {
       toast.warn("El teléfono debe contener solo números (10-15 dígitos)");
       return;
     }
 
-    // Mostrar confirmación antes de guardar
+    // Validación de email opcional pero si existe debe ser válido
+    if (paciente.email && !/\S+@\S+\.\S+/.test(paciente.email)) {
+      toast.warn("Por favor ingresa un email válido");
+      return;
+    }
+
+    // Preparar datos para la confirmación
+    const doctorAsignado =
+      isAdmin && selectedDoctor
+        ? doctores.find((d) => d.id == selectedDoctor)?.nombre
+        : null;
+
     const result = await Swal.fire({
       title: paciente.id ? "¿Actualizar paciente?" : "¿Crear nuevo paciente?",
       html: `
@@ -48,13 +69,16 @@ function PacienteModal({
           <p><strong>Nombre:</strong> ${paciente.nombre}</p>
           <p><strong>Apellido:</strong> ${paciente.apellido}</p>
           <p><strong>Teléfono:</strong> ${paciente.telefono}</p>
-          <p><strong>Teléfono:</strong> ${paciente.email}</p>
           ${
-            isAdmin
-              ? `<p><strong>Doctor asignado:</strong> ${
-                  doctores.find((d) => d.id == paciente.odontologo_id)
-                    ?.nombre || "No asignado"
-                }</p>`
+            paciente.email
+              ? `<p><strong>Email:</strong> ${paciente.email}</p>`
+              : ""
+          }
+          ${
+            isAdmin && doctorAsignado
+              ? `<p><strong>Doctor asignado:</strong> ${doctorAsignado}</p>`
+              : isAdmin
+              ? "<p><strong>Doctor asignado:</strong> No asignado</p>"
               : ""
           }
         </div>
@@ -65,11 +89,6 @@ function PacienteModal({
       cancelButtonColor: "#6b7280",
       confirmButtonText: paciente.id ? "Sí, actualizar" : "Sí, crear",
       cancelButtonText: "Cancelar",
-      customClass: {
-        popup: "text-left rounded-lg",
-        confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
-        cancelButton: "px-4 py-2 rounded-md hover:bg-gray-200 transition",
-      },
     });
 
     if (result.isConfirmed) {
@@ -82,9 +101,6 @@ function PacienteModal({
           } correctamente.`,
           icon: "success",
           confirmButtonColor: "#0d9488",
-          customClass: {
-            confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
-          },
         });
         onClose();
       } catch (error) {
@@ -92,7 +108,7 @@ function PacienteModal({
           title: "Error",
           text: `No se pudo ${
             paciente.id ? "actualizar" : "crear"
-          } el paciente.`,
+          } el paciente: ${error.message}`,
           icon: "error",
           confirmButtonColor: "#0d9488",
         });
@@ -100,10 +116,11 @@ function PacienteModal({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-        {/* Encabezado */}
         <div className="bg-teal-600 p-4">
           <h3 className="text-xl font-bold text-white flex items-center">
             <FiUser className="mr-2" />
@@ -111,24 +128,24 @@ function PacienteModal({
           </h3>
         </div>
 
-        {/* Formulario */}
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Asignar a Doctor
+                </label>
+                <DoctorSelect
+                  doctores={doctores}
+                  value={selectedDoctor}
+                  onChange={handleDoctorChange}
+                  showLabel={false}
+                  placeholder="Seleccionar doctor"
+                />
+              </div>
+            )}
+
             <div>
-              {isAdmin && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Asignar a Doctor
-                  </label>
-                  <DoctorSelect
-                    doctores={doctores}
-                    value={paciente.odontologo_id || null}
-                    onChange={handleDoctorChange}
-                    showLabel={false}
-                    placeholder="Seleccionar doctor"
-                  />
-                </div>
-              )}
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nombre *
               </label>
@@ -175,7 +192,6 @@ function PacienteModal({
                   placeholder="Ej: 5512345678"
                   value={paciente.telefono || ""}
                   onChange={handleChange}
-                  pattern="[0-9]{10,15}"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   required
                 />
@@ -188,7 +204,7 @@ function PacienteModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Correo *
+                Correo Electrónico
               </label>
               <div className="relative">
                 <input
@@ -198,15 +214,12 @@ function PacienteModal({
                   value={paciente.email || ""}
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  required
                 />
-                <FiPhone className="absolute left-3 top-3.5 text-gray-400" />
+                <FiMail className="absolute left-3 top-3.5 text-gray-400" />
               </div>
-              <p className="text-xs text-gray-500 mt-1"></p>
             </div>
           </div>
 
-          {/* Botones */}
           <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
             <button
               type="button"

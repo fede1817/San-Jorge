@@ -204,22 +204,6 @@ router.get("/proximas", verificarToken, async (req, res) => {
   }
 });
 
-// Cambiar estado de tratamiento
-router.put("/:id", async (req, res) => {
-  const { id } = req.params;
-  const { estado } = req.body;
-
-  try {
-    const result = await pool.query(
-      `UPDATE tratamientos SET estado = $1 WHERE id = $2 RETURNING *`,
-      [estado, id]
-    );
-    res.json(result.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Eliminar paciente y sus tratamientos
 router.delete("/:id", verificarToken, async (req, res) => {
   const { id } = req.params;
@@ -289,6 +273,86 @@ router.post("/:id/tratamiento", verificarToken, async (req, res) => {
   } catch (error) {
     console.error("Error al guardar tratamiento:", error);
     res.status(500).json({ mensaje: "Error al guardar tratamiento" });
+  }
+});
+
+router.delete("/citas/:id", verificarToken, async (req, res) => {
+  const { id } = req.params;
+  const odontologoId = req.odontologoId;
+  const rol = req.rol;
+
+  try {
+    // Verificar si la cita existe y pertenece al odontólogo (si no es admin)
+    const citaExistente = await pool.query(
+      "SELECT * FROM tratamientos WHERE id = $1",
+      [id]
+    );
+
+    if (citaExistente.rows.length === 0) {
+      return res.status(404).json({ mensaje: "Cita no encontrada" });
+    }
+
+    const cita = citaExistente.rows[0];
+
+    // Si no es admin, verificar que la cita pertenezca al odontólogo
+    if (rol !== "Administrador" && cita.odontologo_id !== odontologoId) {
+      return res.status(403).json({ mensaje: "No autorizado" });
+    }
+
+    // Eliminar la cita
+    await pool.query("DELETE FROM tratamientos WHERE id = $1", [id]);
+
+    res.json({ mensaje: "Cita eliminada correctamente" });
+  } catch (error) {
+    console.error("Error al eliminar cita:", error);
+    res.status(500).json({ mensaje: "Error al eliminar cita" });
+  }
+});
+
+router.put("/citas/:id", verificarToken, async (req, res) => {
+  const { id } = req.params;
+  const { fecha, hora, procedimiento, estado, odontologo_id } = req.body;
+  const usuarioId = req.odontologoId;
+  const rol = req.rol;
+
+  try {
+    // Verificar si la cita existe
+    const citaExistente = await pool.query(
+      "SELECT * FROM tratamientos WHERE id = $1",
+      [id]
+    );
+
+    if (citaExistente.rows.length === 0) {
+      return res.status(404).json({ mensaje: "Cita no encontrada" });
+    }
+
+    const cita = citaExistente.rows[0];
+
+    // Si no es admin, verificar que la cita pertenezca al odontólogo
+    if (rol !== "Administrador" && cita.odontologo_id !== usuarioId) {
+      return res.status(403).json({ mensaje: "No autorizado" });
+    }
+
+    // Determinar el odontólogo_id a usar
+    const odontologoIdFinal =
+      rol === "Administrador" ? odontologo_id || cita.odontologo_id : usuarioId;
+
+    // Actualizar la cita
+    const result = await pool.query(
+      `UPDATE tratamientos 
+       SET fecha = $1, hora = $2, procedimiento = $3, estado = $4, odontologo_id = $5
+       WHERE id = $6 
+       RETURNING *`,
+      [fecha, hora, procedimiento, estado, odontologoIdFinal, id]
+    );
+
+    res.json({
+      mensaje: "Cita actualizada correctamente",
+      cita: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error al actualizar cita:", error);
+    res.status(500).json({ mensaje: "Error al actualizar cita" });
   }
 });
 

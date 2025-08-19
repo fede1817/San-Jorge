@@ -35,7 +35,18 @@ export default function Dashboard() {
   const [verModalOpen, setVerModalOpen] = useState(false);
   const [pacienteParaVer, setPacienteParaVer] = useState(null);
   const [modalCitaOpen, setModalCitaOpen] = useState(false);
+  const handleEditCita = (cita) => {
+    setCurrentCita(cita);
+    setModalCitaOpen(true);
+  };
 
+  // Función para manejar la creación de citas
+
+  // Función para cerrar el modal
+  const handleCloseCitaModal = () => {
+    setModalCitaOpen(false);
+    setCurrentCita(null);
+  };
   // Funciones para fetch data
   const fetchPacientes = async () => {
     try {
@@ -160,36 +171,92 @@ export default function Dashboard() {
   const handleSaveCita = async (citaData) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `http://localhost:3001/api/pacientes/${citaData.paciente_id}/tratamiento`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            fecha: citaData.fecha,
-            hora: citaData.hora,
-            procedimiento: citaData.procedimiento,
-            odontologo_id: citaData.odontologo_id,
-            estado: "programado",
-          }),
-        }
-      );
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      // Determinar método y URL
+      const metodo = citaData.id ? "PUT" : "POST";
+      let url = "";
+
+      if (citaData.id) {
+        // Modo edición - usar endpoint de citas
+        url = `http://localhost:3001/api/pacientes/citas/${citaData.id}`;
+      } else {
+        // Modo creación - usar endpoint de pacientes/tratamiento
+        url = `http://localhost:3001/api/pacientes/${citaData.paciente_id}/tratamiento`;
+      }
+
+      // Preparar datos a enviar
+      const datosCita = {
+        fecha: citaData.fecha,
+        hora: citaData.hora,
+        procedimiento: citaData.procedimiento,
+        estado: citaData.estado || "programado",
+      };
+
+      // Si es admin y hay odontologo_id especificado, incluirlo
+      if (user?.especialidad === "Administrador" && citaData.odontologo_id) {
+        datosCita.odontologo_id = citaData.odontologo_id;
+      } else if (!citaData.id) {
+        // En creación, si no es admin, usar el odontologoId del usuario
+        datosCita.odontologo_id = user?.id;
+      }
+
+      const res = await fetch(url, {
+        method: metodo,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(datosCita),
+      });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || "Error al guardar cita");
+        throw new Error(
+          errorData.message ||
+            errorData.mensaje ||
+            `Error al ${citaData.id ? "actualizar" : "guardar"} cita`
+        );
       }
 
-      toast.success("Cita programada correctamente");
+      toast.success(
+        citaData.id
+          ? "Cita actualizada correctamente"
+          : "Cita programada correctamente"
+      );
       setModalCitaOpen(false);
+      setCurrentCita(null);
       fetchCitas();
     } catch (error) {
       toast.error(error.message);
     }
   };
+
+  const handleDeleteCita = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `http://localhost:3001/api/pacientes/citas/${id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.mensaje || "Error al eliminar cita");
+      }
+
+      toast.success("Cita eliminada correctamente");
+      fetchCitas(); // Recargar citas
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  // Estado para la cita actual
+  const [currentCita, setCurrentCita] = useState(null);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -314,6 +381,8 @@ export default function Dashboard() {
                   formatHora={formatHora}
                   isAdmin={userData?.especialidad === "Administrador"}
                   doctores={doctores}
+                  onEdit={handleEditCita} // Pasar función de edición
+                  onDelete={handleDeleteCita}
                 />
               </>
             )}
@@ -328,7 +397,7 @@ export default function Dashboard() {
         paciente={currentPaciente}
         setPaciente={setCurrentPaciente}
         isAdmin={userData?.especialidad === "Administrador"}
-        doctores={doctores} // Lista completa de doctores
+        doctores={doctores}
       />
 
       {pacienteParaVer && (
@@ -345,12 +414,13 @@ export default function Dashboard() {
 
       <CitaModal
         isOpen={modalCitaOpen}
-        onClose={() => setModalCitaOpen(false)}
-        onSave={handleSaveCita}
+        onClose={handleCloseCitaModal}
+        onSave={handleSaveCita} // Usamos la misma función para crear y editar
         pacientes={pacientes}
         odontologoId={userData?.id}
         isAdmin={userData?.especialidad === "Administrador"}
         doctores={doctores}
+        cita={currentCita} // Pasar null para crear o la cita para editar
       />
     </div>
   );
