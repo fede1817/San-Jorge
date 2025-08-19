@@ -78,6 +78,7 @@ export default function Dashboard() {
       setLoading((prev) => ({ ...prev, citas: false }));
     }
   };
+
   const fetchDoctores = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -108,6 +109,7 @@ export default function Dashboard() {
         nombre: currentPaciente.nombre,
         apellido: currentPaciente.apellido,
         telefono: currentPaciente.telefono,
+        email: currentPaciente.email,
       };
 
       // Si es admin y hay doctor seleccionado, incluir odontologo_id
@@ -189,60 +191,11 @@ export default function Dashboard() {
     }
   };
 
-  const handleCancelCita = async (id) => {
-    if (!window.confirm("¿Está seguro de cancelar esta cita?")) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(
-        `http://localhost:3001/api/pacientes/${id}/cancelar`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!res.ok) throw new Error("Error al cancelar cita");
-
-      setCitas(
-        citas.map((cita) =>
-          cita.id === id ? { ...cita, estado: "cancelado" } : cita
-        )
-      );
-      toast.success("Cita cancelada correctamente");
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     toast.info("Sesión cerrada");
     navigate("/");
-  };
-
-  const obtenerListaDoctores = (pacientes) => {
-    const doctoresUnicos = [];
-    const idsVistos = new Set();
-
-    pacientes.forEach((paciente) => {
-      const doctorId = paciente.doctorId || paciente.doctorid;
-      const doctorNombre = paciente.doctorNombre || paciente.doctornombre;
-
-      if (doctorId && !idsVistos.has(doctorId)) {
-        doctoresUnicos.push({
-          id: doctorId,
-          nombre: doctorNombre || `Doctor ${doctorId}`,
-        });
-        idsVistos.add(doctorId);
-      }
-    });
-
-    return doctoresUnicos;
   };
 
   // Formateadores
@@ -357,7 +310,6 @@ export default function Dashboard() {
                 <Citas
                   citas={citas}
                   loading={loading.citas}
-                  onCancel={handleCancelCita}
                   formatFecha={formatFecha}
                   formatHora={formatHora}
                   isAdmin={userData?.especialidad === "Administrador"}

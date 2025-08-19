@@ -9,7 +9,6 @@ import Swal from "sweetalert2";
 export default function Citas({
   citas,
   loading,
-  onCancel,
   formatFecha,
   formatHora,
   isAdmin = false,
@@ -42,34 +41,6 @@ export default function Citas({
     setFilteredCitas(result);
   }, [citas, searchTerm, selectedDoctor, isAdmin]);
 
-  const handleCancelWithConfirmation = (id, pacienteNombre) => {
-    Swal.fire({
-      title: "¿Cancelar cita?",
-      html: `
-        <div class="text-left">
-          <p>Estás a punto de cancelar la cita de:</p>
-          <p class="font-bold">${pacienteNombre}</p>
-          <p class="text-red-600 mt-2">Esta acción cambiará el estado de la cita a "cancelado"</p>
-        </div>
-      `,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#0d9488",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Sí, cancelar",
-      cancelButtonText: "No, mantener",
-      customClass: {
-        popup: "text-left",
-        confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
-        cancelButton: "px-4 py-2 rounded-md hover:bg-gray-300 transition",
-      },
-    }).then((result) => {
-      if (result.isConfirmed) {
-        onCancel(id);
-      }
-    });
-  };
-
   if (loading) return <LoadingSpinner />;
 
   const columns = [
@@ -84,7 +55,6 @@ export default function Citas({
             <div className="text-sm font-medium text-gray-900">
               {row.paciente_nombre} {row.paciente_apellido}
             </div>
-            <div className="text-xs text-gray-500">{row.telefono}</div>
           </div>
         </div>
       ),
@@ -132,20 +102,6 @@ export default function Citas({
     },
     {
       header: "Acciones",
-      render: (_, row) =>
-        row.estado === "programado" && (
-          <div className="flex justify-end">
-            <button
-              onClick={() =>
-                handleCancelWithConfirmation(row.id, row.paciente_nombre)
-              }
-              className="text-red-600 hover:text-red-800 p-1"
-              title="Cancelar cita"
-            >
-              <FiX size={18} />
-            </button>
-          </div>
-        ),
     },
   ];
 

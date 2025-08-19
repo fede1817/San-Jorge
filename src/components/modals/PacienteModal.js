@@ -48,6 +48,7 @@ function PacienteModal({
           <p><strong>Nombre:</strong> ${paciente.nombre}</p>
           <p><strong>Apellido:</strong> ${paciente.apellido}</p>
           <p><strong>Teléfono:</strong> ${paciente.telefono}</p>
+          <p><strong>Teléfono:</strong> ${paciente.email}</p>
           ${
             isAdmin
               ? `<p><strong>Doctor asignado:</strong> ${
@@ -183,6 +184,25 @@ function PacienteModal({
               <p className="text-xs text-gray-500 mt-1">
                 Solo números (10-15 dígitos)
               </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Correo *
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="nombre@correo.com"
+                  value={paciente.email || ""}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  required
+                />
+                <FiPhone className="absolute left-3 top-3.5 text-gray-400" />
+              </div>
+              <p className="text-xs text-gray-500 mt-1"></p>
             </div>
           </div>
 

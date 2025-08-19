@@ -120,12 +120,6 @@ export default function Pacientes({
             {row.telefono && <FiPhone className="text-gray-400" />}
             <span>{row.telefono?.replace(/-/g, "") || "Sin teléfono"}</span>
           </div>
-          <div className="text-xs text-gray-500">
-            {row.email
-              ? row.email.substring(0, 15) +
-                (row.email.length > 15 ? "..." : "")
-              : ""}
-          </div>
         </>
       ),
     },

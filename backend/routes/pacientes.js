@@ -101,7 +101,7 @@ router.get("/doctores", verificarToken, async (req, res) => {
 router.post("/", verificarToken, async (req, res) => {
   const odontologoId = req.odontologoId;
   const rol = req.rol;
-  const { nombre, apellido, telefono, odontologo_id } = req.body;
+  const { nombre, apellido, telefono, email, odontologo_id } = req.body;
 
   // Determinar el odontólogo asignado
   const odontologoAsignado =
@@ -109,8 +109,8 @@ router.post("/", verificarToken, async (req, res) => {
 
   try {
     await pool.query(
-      "INSERT INTO pacientes (nombre, apellido, telefono, odontologo_id) VALUES ($1, $2, $3, $4)",
-      [nombre, apellido, telefono, odontologoAsignado]
+      "INSERT INTO pacientes (nombre, apellido, telefono, email, odontologo_id) VALUES ($1, $2, $3, $4, $5)",
+      [nombre, apellido, telefono, email, odontologoAsignado]
     );
 
     res.status(201).json({ mensaje: "Paciente creado" });
@@ -123,21 +123,21 @@ router.post("/", verificarToken, async (req, res) => {
 // Actualizar paciente (PUT)
 router.put("/:id", verificarToken, async (req, res) => {
   const rol = req.rol;
-  const { nombre, apellido, telefono, odontologo_id } = req.body;
+  const { nombre, apellido, telefono, email, odontologo_id } = req.body;
   const { id } = req.params;
 
   try {
     if (rol === "Administrador") {
       // Admin puede cambiar el doctor asignado
       await pool.query(
-        "UPDATE pacientes SET nombre=$1, apellido=$2, telefono=$3, odontologo_id=$4 WHERE id=$5",
-        [nombre, apellido, telefono, odontologo_id, id]
+        "UPDATE pacientes SET nombre=$1, apellido=$2, telefono=$3, email=$4, odontologo_id=$5 WHERE id=$6",
+        [nombre, apellido, telefono, email, odontologo_id, id]
       );
     } else {
       // Odontólogo normal solo puede actualizar datos básicos
       await pool.query(
-        "UPDATE pacientes SET nombre=$1, apellido=$2, telefono=$3 WHERE id=$4",
-        [nombre, apellido, telefono, id]
+        "UPDATE pacientes SET nombre=$1, apellido=$2, telefono=$3, email=$4 WHERE id=$5",
+        [nombre, apellido, telefono, email, id]
       );
     }
 
@@ -289,29 +289,6 @@ router.post("/:id/tratamiento", verificarToken, async (req, res) => {
   } catch (error) {
     console.error("Error al guardar tratamiento:", error);
     res.status(500).json({ mensaje: "Error al guardar tratamiento" });
-  }
-});
-
-// Cancelar tratamiento
-router.put("/:id/cancelar", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const result = await pool.query(
-      `UPDATE tratamientos 
-       SET estado = 'cancelado' 
-       WHERE id = $1 
-       RETURNING *`,
-      [id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Cita no encontrada" });
-    }
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
 });
 
