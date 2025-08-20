@@ -18,16 +18,21 @@ function PacienteModal({
 
   // Efecto para sincronizar el doctor seleccionado con los datos del paciente
   useEffect(() => {
-    if (paciente && paciente.odontologo_id) {
-      setSelectedDoctor(paciente.odontologo_id.toString());
-    } else {
-      setSelectedDoctor(null);
+    if (isOpen) {
+      // Resetear cuando se abre el modal
+      if (paciente && paciente.odontologo_id) {
+        setSelectedDoctor(paciente.odontologo_id.toString());
+      } else {
+        setSelectedDoctor(null);
+      }
     }
   }, [paciente, isOpen]);
 
   const handleDoctorChange = (doctorId) => {
     setSelectedDoctor(doctorId);
-    setPaciente((prev) => ({ ...prev, odontologo_id: doctorId }));
+    // Convertir a número para el backend
+    const odontologoId = doctorId ? parseInt(doctorId) : null;
+    setPaciente((prev) => ({ ...prev, odontologo_id: odontologoId }));
   };
 
   const handleChange = (e) => {

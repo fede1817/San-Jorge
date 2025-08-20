@@ -58,11 +58,15 @@ export default function Dashboard() {
       if (!res.ok) throw new Error("Error al cargar pacientes");
       const data = await res.json();
 
-      // Normaliza los nombres de propiedades
+      // Normaliza correctamente para que coincida con lo que espera el modal
       const normalizedData = data.map((paciente) => ({
         ...paciente,
-        doctorId: paciente.doctorid || paciente.doctorId,
-        doctorNombre: paciente.doctornombre || paciente.doctorNombre,
+        odontologo_id:
+          paciente.doctorid ||
+          paciente.doctorId ||
+          paciente.odontologo_id ||
+          null,
+        doctorNombre: paciente.doctornombre || paciente.doctorNombre || "",
       }));
 
       setPacientes(normalizedData);
