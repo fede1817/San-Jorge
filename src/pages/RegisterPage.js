@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ function RegisterPage() {
     especialidad: "",
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -58,15 +60,17 @@ function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50">
-      <div className="w-full max-w-2xl mx-4 my-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50 p-4">
+      <ToastContainer position="top-center" toastClassName="mt-16 mx-4" />
+
+      <div className="w-full max-w-2xl mx-auto my-4 sm:my-8">
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
           {/* Encabezado */}
-          <div className="bg-teal-600 py-6 px-8 text-center">
+          <div className="bg-teal-600 py-5 sm:py-6 px-6 sm:px-8 text-center">
             <div className="flex justify-center mb-3">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 text-white"
+                className="h-10 w-10 sm:h-12 sm:w-12 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -79,18 +83,18 @@ function RegisterPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">
               Registro Odontológico
             </h1>
-            <p className="text-teal-100 mt-1">
+            <p className="text-teal-100 mt-1 text-sm sm:text-base">
               Complete sus datos profesionales
             </p>
           </div>
 
           {/* Formulario */}
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-5 sm:p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-700 mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4">
                 Información Personal
               </h2>
             </div>
@@ -105,7 +109,8 @@ function RegisterPage() {
                 placeholder="Juan"
                 value={formData.nombre}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-4 py-3 text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                autoComplete="given-name"
               />
             </div>
 
@@ -119,7 +124,8 @@ function RegisterPage() {
                 placeholder="Pérez"
                 value={formData.apellido}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-4 py-3 text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                autoComplete="family-name"
               />
             </div>
 
@@ -133,7 +139,8 @@ function RegisterPage() {
                 placeholder="juan.perez@sanjorge.com"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-4 py-3 text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                autoComplete="email"
               />
             </div>
 
@@ -141,18 +148,64 @@ function RegisterPage() {
               <label className="block text-gray-700 text-sm font-medium mb-2">
                 Contraseña *
               </label>
-              <input
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-12"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="md:col-span-2 mt-4">
-              <h2 className="text-xl font-semibold text-gray-700 mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4">
                 Información Profesional
               </h2>
             </div>
@@ -167,7 +220,8 @@ function RegisterPage() {
                 placeholder="12345678"
                 value={formData.matricula}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-4 py-3 text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                autoComplete="off"
               />
             </div>
 
@@ -179,7 +233,7 @@ function RegisterPage() {
                 name="especialidad"
                 value={formData.especialidad}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                className="w-full px-4 py-3 text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
               >
                 <option value="">Seleccione...</option>
                 <option value="Ortodoncia">Ortodoncia</option>
@@ -193,7 +247,7 @@ function RegisterPage() {
               </select>
             </div>
 
-            <div className="md:col-span-2 mt-6">
+            <div className="md:col-span-2 mt-5 sm:mt-6">
               <button
                 onClick={handleRegister}
                 disabled={loading}
