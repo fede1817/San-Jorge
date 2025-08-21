@@ -5,7 +5,7 @@
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.5
 
--- Started on 2025-08-20 17:03:19
+-- Started on 2025-08-21 17:56:25
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -423,15 +423,8 @@ COPY public.historial_pagos (id, pago_id, monto, fecha, metodo_pago, referencia,
 --
 
 COPY public.odontologos_unificados (id, nombre, apellido, email, password_hash, especialidad, matricula, creado_en) FROM stdin;
-1	federico	britez	frayg52@gmail.com	$2b$10$opcOOQZm7vB69KuYsjqh6u1mxTW39136DbDlw4xk67GM/bct96pY6	Odontolog¡a	\N	2025-07-28 08:54:32.059873
-2	prueba	p	preuba@gmail.com	$2b$10$R3a895KkSAAZwMU.85FsTuSZGLDwonCVxf3Q5Ts/YCDjiv3/x0WEO	Odontolog¡a	\N	2025-07-28 08:54:32.059873
-3	p	p	p@gmail.com	$2b$10$6B7aBQwzQ9H4CYA.KrEH7uW3DdSumeZMay3WYJYU7VKW1n05dkRbG	Odontolog¡a	\N	2025-07-28 08:54:32.059873
-4	Luis	P‚rez	\N	\N	Odontolog¡a	OD12345	2025-07-28 08:54:44.280983
-6	JOSE 	CARLOS	J@gmail.com	$2b$10$cWNrCOQH50xSdAlFnuvZFucw085LG.dTK0u47XuW67Fzubl2NfBrG	ORTODONCIA	5150902	2025-07-28 10:04:07.607589
-7	jose 	cardozo	jose@gmail.com	$2b$10$KLPfaYV2aiq6WUxesCvG7e9Vf1hbGjiET2RJ0NdI2d/9rBSzbjil6	neurologo	4150902	2025-07-28 14:54:20.494568
-8	jane	doe	german@gmail.com	$2b$10$s/on8INPrduENTOBF06u2.SxFn5LBaZ5qYLnU5xA/RAeet7VVY49S	Endodoncia	5150902	2025-07-31 10:13:37.006683
-9	Arnaldo	zoilan	l@gmail.com	$2b$10$evNeA2yJHzHE9Uso1wDxY.SlNDqIfHeABKTX9kj5vE96KiDq0Aupm	Cirugía	5150902	2025-07-31 10:16:32.071063
-11	Naira	David	naira.david@sanjorge.com	$2b$10$MaMhgUZtkmVavLI5RSSdGeHVkSquayexmomo94fpEOeDW0VQMZ5Lq	Administrador	12345678	2025-08-08 09:54:27.291994
+1	Naira	David	naira.david@sanjorge.com	$2b$10$3NL5mKYNKWnxc6GJhaYPR.zla32DQQhVNqwFB3u/G1HOzdd3MlcL.	Administrador	5156652	2025-08-21 17:28:11.852853
+2	Alfredo	Benitez	alfredo.benitez@sanjorge.com	$2b$10$F2hsG4VSAyO3NzF5OK8EcemUUXuGkkVc90AXhRV6gXfBuDd1IRbhO	Administrador	1064599	2025-08-21 17:39:08.951171
 \.
 
 
@@ -442,13 +435,6 @@ COPY public.odontologos_unificados (id, nombre, apellido, email, password_hash, 
 --
 
 COPY public.pacientes (id, nombre, apellido, cedula, fecha_nacimiento, telefono, email, odontologo_id) FROM stdin;
-28	Néstor	zavala1	\N	\N	0974551151	\N	1
-32	jose	samudio	\N	\N	1223255554	\N	1
-33	Arnaldo	gimenes	\N	\N	0974551151	\N	1
-37	JOEL	RIVEROS	\N	\N	0974551156	\N	1
-39	JOSE	CARDOZO	\N	\N	0974777777	\N	1
-40	ARTURO 	FERNANDEZ	\N	\N	0974816278	Arturo.fernadez@surcomercial.com.py	1
-9	ariel 	zoilan	\N	\N	0974551560	ariel.zoilan@suromercial.com	7
 \.
 
 
@@ -469,14 +455,6 @@ COPY public.pagos (id, paciente_id, tratamiento_id, fecha, monto_total, estado, 
 --
 
 COPY public.tratamientos (id, paciente_id, odontologo_id, fecha, diagnostico, procedimiento, observaciones, estado, proxima_consulta, hora, motivo) FROM stdin;
-6	9	7	2025-07-23	dfd	dsa	asda	sdasdsadasdada	2025-07-31	\N	\N
-43	28	1	2025-08-05	\N		\N	cancelado	\N	09:00:00	\N
-44	28	1	2025-08-07	\N	hola	\N	cancelado	\N	09:00:00	\N
-46	28	1	2025-08-07	\N	sada	\N	cancelado	\N	09:00:00	\N
-47	28	1	2025-08-07	\N	sdadsf	\N	cancelado	\N	09:00:00	\N
-49	33	1	2025-08-08	\N	hipo	\N	programado	\N	09:00:00	\N
-50	32	1	2025-08-08	\N	asda	\N	programado	\N	09:00:00	\N
-51	9	7	2025-08-18	\N	p	\N	programado	\N	09:00:00	\N
 \.
 
 
@@ -513,7 +491,7 @@ SELECT pg_catalog.setval('public.historial_pagos_id_seq', 1, false);
 -- Name: odontologos_unificados_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 11, true);
+SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 2, true);
 
 
 --
@@ -522,7 +500,7 @@ SELECT pg_catalog.setval('public.odontologos_unificados_id_seq', 11, true);
 -- Name: pacientes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.pacientes_id_seq', 41, true);
+SELECT pg_catalog.setval('public.pacientes_id_seq', 1, false);
 
 
 --
@@ -540,7 +518,7 @@ SELECT pg_catalog.setval('public.pagos_id_seq', 1, false);
 -- Name: tratamientos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tratamientos_id_seq', 54, true);
+SELECT pg_catalog.setval('public.tratamientos_id_seq', 1, false);
 
 
 --
@@ -705,7 +683,7 @@ ALTER TABLE ONLY public.tratamientos
     ADD CONSTRAINT tratamientos_paciente_id_fkey FOREIGN KEY (paciente_id) REFERENCES public.pacientes(id);
 
 
--- Completed on 2025-08-20 17:03:19
+-- Completed on 2025-08-21 17:56:25
 
 --
 -- PostgreSQL database dump complete
