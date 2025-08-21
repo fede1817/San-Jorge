@@ -164,8 +164,12 @@ export default function Dashboard() {
       });
 
       if (!res.ok) throw new Error("Error al eliminar paciente");
+
       toast.success("Paciente eliminado");
+
+      // Actualizar AMBAS listas
       fetchPacientes();
+      fetchCitas(); // ← ¡Esto es lo que faltaba!
     } catch (error) {
       toast.error(error.message);
     }

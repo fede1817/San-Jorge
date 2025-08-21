@@ -26,6 +26,9 @@ export default function Pacientes({
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [filteredPacientes, setFilteredPacientes] = useState([]);
 
+  const formatNombreCompleto = (nombre, apellido) => {
+    return `${nombre || ""} ${apellido || ""}`.trim();
+  };
   // Filtrar pacientes basado en búsqueda y selección de doctor
   useEffect(() => {
     let result = [...pacientes];
@@ -40,11 +43,10 @@ export default function Pacientes({
       const term = searchTerm.toLowerCase();
       result = result.filter(
         (paciente) =>
-          `${paciente.nombre} ${paciente.apellido}`
-            .toLowerCase()
-            .includes(term) ||
-          paciente.telefono?.toLowerCase().includes(term) ||
-          paciente.email?.toLowerCase().includes(term)
+          (paciente.nombre || "").toLowerCase().includes(term) ||
+          (paciente.apellido || "").toLowerCase().includes(term) ||
+          (paciente.telefono || "").toLowerCase().includes(term) ||
+          (paciente.email || "").toLowerCase().includes(term)
       );
     }
 
@@ -106,7 +108,7 @@ export default function Pacientes({
           </div>
           <div className="ml-4">
             <div className="text-sm font-medium text-gray-900">
-              {row.nombre} {row.apellido}
+              {formatNombreCompleto(row.nombre, row.apellido)}
             </div>
           </div>
         </div>

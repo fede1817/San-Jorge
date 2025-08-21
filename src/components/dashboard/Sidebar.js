@@ -11,9 +11,9 @@ import { FaRegMoneyBillAlt } from "react-icons/fa";
 export default function Sidebar({
   open,
   user,
-  currentSection, // Nueva prop: 'pacientes', 'citas', 'pagos'
+  currentSection, // 'pacientes', 'citas', 'pagos'
   onToggle,
-  onSectionChange, // Nueva función para cambiar sección
+  onSectionChange,
   onAddPatient,
   onLogout,
 }) {
@@ -79,15 +79,14 @@ export default function Sidebar({
           {open && <span>Pagos</span>}
         </button>
 
-        {currentSection === "pacientes" && (
-          <button
-            onClick={onAddPatient}
-            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-teal-700 mb-2 transition-colors"
-          >
-            <FiPlus size={20} />
-            {open && <span>Nuevo Paciente</span>}
-          </button>
-        )}
+        {/* Botón "Nuevo Paciente" siempre visible */}
+        <button
+          onClick={onAddPatient}
+          className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-teal-700 mb-2 transition-colors"
+        >
+          <FiPlus size={20} />
+          {open && <span>Nuevo Paciente</span>}
+        </button>
       </nav>
 
       <div className="p-4 border-t border-teal-700">
