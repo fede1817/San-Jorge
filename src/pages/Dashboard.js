@@ -26,8 +26,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState({ pacientes: true, citas: true });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userData, setUserData] = useState(null);
-  const [showCitas, setShowCitas] = useState(false);
   const navigate = useNavigate();
+
+  // Nuevo sistema de secciones
+  const [currentSection, setCurrentSection] = useState("pacientes"); // 'pacientes', 'citas', 'pagos'
 
   // Estados para modales
   const [modalPacienteOpen, setModalPacienteOpen] = useState(false);
@@ -35,18 +37,18 @@ export default function Dashboard() {
   const [verModalOpen, setVerModalOpen] = useState(false);
   const [pacienteParaVer, setPacienteParaVer] = useState(null);
   const [modalCitaOpen, setModalCitaOpen] = useState(false);
+  const [currentCita, setCurrentCita] = useState(null);
+
   const handleEditCita = (cita) => {
     setCurrentCita(cita);
     setModalCitaOpen(true);
   };
 
-  // Función para manejar la creación de citas
-
-  // Función para cerrar el modal
   const handleCloseCitaModal = () => {
     setModalCitaOpen(false);
     setCurrentCita(null);
   };
+
   // Funciones para fetch data
   const fetchPacientes = async () => {
     try {
@@ -58,7 +60,6 @@ export default function Dashboard() {
       if (!res.ok) throw new Error("Error al cargar pacientes");
       const data = await res.json();
 
-      // Normaliza correctamente para que coincida con lo que espera el modal
       const normalizedData = data.map((paciente) => ({
         ...paciente,
         odontologo_id:
@@ -119,7 +120,6 @@ export default function Dashboard() {
         ? `http://localhost:3001/api/pacientes/${currentPaciente.id}`
         : "http://localhost:3001/api/pacientes";
 
-      // Preparar datos a enviar
       const datosPaciente = {
         nombre: currentPaciente.nombre,
         apellido: currentPaciente.apellido,
@@ -127,7 +127,6 @@ export default function Dashboard() {
         email: currentPaciente.email,
       };
 
-      // Si es admin y hay doctor seleccionado, incluir odontologo_id
       if (
         user?.especialidad === "Administrador" &&
         currentPaciente.odontologo_id
@@ -177,19 +176,15 @@ export default function Dashboard() {
       const token = localStorage.getItem("token");
       const user = JSON.parse(localStorage.getItem("user"));
 
-      // Determinar método y URL
       const metodo = citaData.id ? "PUT" : "POST";
       let url = "";
 
       if (citaData.id) {
-        // Modo edición - usar endpoint de citas
         url = `http://localhost:3001/api/pacientes/citas/${citaData.id}`;
       } else {
-        // Modo creación - usar endpoint de pacientes/tratamiento
         url = `http://localhost:3001/api/pacientes/${citaData.paciente_id}/tratamiento`;
       }
 
-      // Preparar datos a enviar
       const datosCita = {
         fecha: citaData.fecha,
         hora: citaData.hora,
@@ -197,11 +192,9 @@ export default function Dashboard() {
         estado: citaData.estado || "programado",
       };
 
-      // Si es admin y hay odontologo_id especificado, incluirlo
       if (user?.especialidad === "Administrador" && citaData.odontologo_id) {
         datosCita.odontologo_id = citaData.odontologo_id;
       } else if (!citaData.id) {
-        // En creación, si no es admin, usar el odontologoId del usuario
         datosCita.odontologo_id = user?.id;
       }
 
@@ -253,14 +246,11 @@ export default function Dashboard() {
       }
 
       toast.success("Cita eliminada correctamente");
-      fetchCitas(); // Recargar citas
+      fetchCitas();
     } catch (error) {
       toast.error(error.message);
     }
   };
-
-  // Estado para la cita actual
-  const [currentCita, setCurrentCita] = useState(null);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -285,7 +275,6 @@ export default function Dashboard() {
   };
 
   // Efectos iniciales
-  // En el useEffect principal, añade:
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
@@ -299,22 +288,34 @@ export default function Dashboard() {
     fetchPacientes();
     fetchCitas();
 
-    // Solo cargar doctores completos si es admin
     if (user.especialidad === "Administrador") {
       fetchDoctores();
     }
   }, [navigate]);
 
-  // Elimina la función obtenerListaDoctores ya que no la necesitaremos
+  // Componente placeholder para pagos (puedes reemplazarlo después)
+  const PagosSection = () => (
+    <div className="bg-white rounded-xl p-6 shadow-md">
+      <div className="text-center py-12">
+        <div className="text-6xl mb-4">💰</div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Módulo de Pagos
+        </h2>
+        <p className="text-gray-600">
+          Esta sección estará disponible próximamente
+        </p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar
         open={sidebarOpen}
         user={userData}
-        showCitas={showCitas}
+        currentSection={currentSection}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
-        onShowCitasChange={setShowCitas}
+        onSectionChange={setCurrentSection}
         onAddPatient={() => {
           setCurrentPaciente({});
           setModalPacienteOpen(true);
@@ -325,7 +326,8 @@ export default function Dashboard() {
       <div className="flex-1 overflow-auto">
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
-            {!showCitas ? (
+            {/* Sección de Pacientes */}
+            {currentSection === "pacientes" && (
               <>
                 <div className="mb-6">
                   <h1 className="text-2xl font-bold text-gray-800">
@@ -353,10 +355,13 @@ export default function Dashboard() {
                   }}
                   formatFecha={formatFecha}
                   isAdmin={userData?.especialidad === "Administrador"}
-                  doctores={doctores} // Ahora pasamos la lista completa de doctores
+                  doctores={doctores}
                 />
               </>
-            ) : (
+            )}
+
+            {/* Sección de Citas */}
+            {currentSection === "citas" && (
               <>
                 <div className="flex justify-between items-center mb-6">
                   <h1 className="text-2xl font-bold text-gray-800">
@@ -364,7 +369,7 @@ export default function Dashboard() {
                   </h1>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setShowCitas(false)}
+                      onClick={() => setCurrentSection("pacientes")}
                       className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg flex items-center gap-2"
                     >
                       <FiArrowLeft /> Pacientes
@@ -385,9 +390,28 @@ export default function Dashboard() {
                   formatHora={formatHora}
                   isAdmin={userData?.especialidad === "Administrador"}
                   doctores={doctores}
-                  onEdit={handleEditCita} // Pasar función de edición
+                  onEdit={handleEditCita}
                   onDelete={handleDeleteCita}
                 />
+              </>
+            )}
+
+            {/* Sección de Pagos (Placeholder) */}
+            {currentSection === "pagos" && (
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <h1 className="text-2xl font-bold text-gray-800">
+                    Gestión de Pagos
+                  </h1>
+                  <button
+                    onClick={() => setCurrentSection("pacientes")}
+                    className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg flex items-center gap-2"
+                  >
+                    <FiArrowLeft /> Volver
+                  </button>
+                </div>
+
+                <PagosSection />
               </>
             )}
           </div>
@@ -419,12 +443,12 @@ export default function Dashboard() {
       <CitaModal
         isOpen={modalCitaOpen}
         onClose={handleCloseCitaModal}
-        onSave={handleSaveCita} // Usamos la misma función para crear y editar
+        onSave={handleSaveCita}
         pacientes={pacientes}
         odontologoId={userData?.id}
         isAdmin={userData?.especialidad === "Administrador"}
         doctores={doctores}
-        cita={currentCita} // Pasar null para crear o la cita para editar
+        cita={currentCita}
       />
     </div>
   );

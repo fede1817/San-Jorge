@@ -6,13 +6,14 @@ import {
   FiHome,
   FiClock,
 } from "react-icons/fi";
+import { FaRegMoneyBillAlt } from "react-icons/fa";
 
 export default function Sidebar({
   open,
   user,
-  showCitas,
+  currentSection, // Nueva prop: 'pacientes', 'citas', 'pagos'
   onToggle,
-  onShowCitasChange,
+  onSectionChange, // Nueva función para cambiar sección
   onAddPatient,
   onLogout,
 }) {
@@ -49,36 +50,50 @@ export default function Sidebar({
 
       <nav className="flex-1 p-2">
         <button
-          onClick={() => onShowCitasChange(false)}
-          className={`w-full flex items-center gap-3 p-3 rounded-lg mb-2 ${
-            !showCitas ? "bg-teal-700" : "hover:bg-teal-700"
+          onClick={() => onSectionChange("pacientes")}
+          className={`w-full flex items-center gap-3 p-3 rounded-lg mb-2 transition-colors ${
+            currentSection === "pacientes" ? "bg-teal-700" : "hover:bg-teal-700"
           }`}
         >
           <FiHome size={20} />
           {open && <span>Pacientes</span>}
         </button>
+
         <button
-          onClick={() => onShowCitasChange(true)}
-          className={`w-full flex items-center gap-3 p-3 rounded-lg mb-2 ${
-            showCitas ? "bg-teal-700" : "hover:bg-teal-700"
+          onClick={() => onSectionChange("citas")}
+          className={`w-full flex items-center gap-3 p-3 rounded-lg mb-2 transition-colors ${
+            currentSection === "citas" ? "bg-teal-700" : "hover:bg-teal-700"
           }`}
         >
           <FiClock size={20} />
           {open && <span>Citas</span>}
         </button>
+
         <button
-          onClick={onAddPatient}
-          className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-teal-700 mb-2"
+          onClick={() => onSectionChange("pagos")}
+          className={`w-full flex items-center gap-3 p-3 rounded-lg mb-2 transition-colors ${
+            currentSection === "pagos" ? "bg-teal-700" : "hover:bg-teal-700"
+          }`}
         >
-          <FiPlus size={20} />
-          {open && <span>Nuevo Paciente</span>}
+          <FaRegMoneyBillAlt size={20} />
+          {open && <span>Pagos</span>}
         </button>
+
+        {currentSection === "pacientes" && (
+          <button
+            onClick={onAddPatient}
+            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-teal-700 mb-2 transition-colors"
+          >
+            <FiPlus size={20} />
+            {open && <span>Nuevo Paciente</span>}
+          </button>
+        )}
       </nav>
 
       <div className="p-4 border-t border-teal-700">
         <button
           onClick={onLogout}
-          className="flex items-center gap-3 text-teal-200 hover:text-white"
+          className="flex items-center gap-3 text-teal-200 hover:text-white transition-colors"
         >
           <FiLogOut size={20} />
           {open && <span>Cerrar sesión</span>}
