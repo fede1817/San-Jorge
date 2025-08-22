@@ -19,8 +19,8 @@ export default function Pacientes({
   onDelete,
   onViewTreatments,
   formatFecha,
-  isAdmin = false, // Nueva prop para identificar si es admin
-  doctores = [], // Lista de doctores para el filtro
+  isAdmin = false,
+  doctores = [],
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
@@ -29,6 +29,18 @@ export default function Pacientes({
   const formatNombreCompleto = (nombre, apellido) => {
     return `${nombre || ""} ${apellido || ""}`.trim();
   };
+
+  // Función para normalizar texto (quitar acentos, minúsculas, etc.)
+  const normalizeText = (text) => {
+    if (!text) return "";
+    return text
+      .toString()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Elimina acentos
+      .trim();
+  };
+
   // Filtrar pacientes basado en búsqueda y selección de doctor
   useEffect(() => {
     let result = [...pacientes];
@@ -39,15 +51,23 @@ export default function Pacientes({
     }
 
     // Filtrar por término de búsqueda
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(
-        (paciente) =>
-          (paciente.nombre || "").toLowerCase().includes(term) ||
-          (paciente.apellido || "").toLowerCase().includes(term) ||
-          (paciente.telefono || "").toLowerCase().includes(term) ||
-          (paciente.email || "").toLowerCase().includes(term)
-      );
+    if (searchTerm.trim()) {
+      const term = normalizeText(searchTerm);
+
+      result = result.filter((paciente) => {
+        // Buscar en cada campo individualmente
+        const campos = [
+          paciente.nombre,
+          paciente.apellido,
+          paciente.telefono,
+          paciente.email,
+        ];
+
+        return campos.some((campo) => {
+          if (!campo) return false;
+          return normalizeText(campo).includes(term);
+        });
+      });
     }
 
     setFilteredPacientes(result);

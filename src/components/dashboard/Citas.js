@@ -50,6 +50,15 @@ export default function Citas({
     }).then((result) => {
       if (result.isConfirmed) {
         onDelete(id);
+        Swal.fire({
+          title: "¡Eliminado!",
+          text: "La cita se elimino correctamente.",
+          icon: "success",
+          confirmButtonColor: "#0d9488",
+          customClass: {
+            confirmButton: "px-4 py-2 rounded-md hover:bg-teal-700 transition",
+          },
+        });
       }
     });
   };

@@ -15,7 +15,7 @@ export default function CitaModal({
   odontologoId,
   isAdmin = false,
   doctores = [],
-  cita = null, // Nueva prop para edición
+  cita = null,
 }) {
   const [formData, setFormData] = useState({
     paciente_id: "",
@@ -28,14 +28,26 @@ export default function CitaModal({
 
   const [pacientesFiltrados, setPacientesFiltrados] = useState([]);
 
-  // Efecto para inicializar el formulario cuando cambia la cita o se abre el modal
+  // Función para formatear la hora en formato de 24 horas
+  const formatHora24 = (horaString) => {
+    if (!horaString) return "";
+
+    // Si ya está en formato 24h, simplemente devolverlo
+    if (horaString.includes(":")) {
+      const [hours, minutes] = horaString.split(":");
+      return `${hours.padStart(2, "0")}:${minutes}`;
+    }
+
+    return horaString;
+  };
+
   useEffect(() => {
     if (cita) {
-      // Modo edición
+      // Modo edición - asegurar que la hora esté en formato 24h
       setFormData({
         paciente_id: cita.paciente_id || "",
         fecha: cita.fecha ? new Date(cita.fecha) : new Date(),
-        hora: cita.hora || "09:00",
+        hora: formatHora24(cita.hora) || "09:00",
         procedimiento: cita.procedimiento || "",
         estado: cita.estado || "programado",
         odontologo_id: cita.odontologo_id || odontologoId,
@@ -53,7 +65,6 @@ export default function CitaModal({
     }
   }, [cita, odontologoId, isOpen]);
 
-  // Efecto para filtrar pacientes según el doctor seleccionado
   useEffect(() => {
     if (isAdmin && formData.odontologo_id) {
       const pacientesDelDoctor = pacientes.filter(
@@ -61,7 +72,6 @@ export default function CitaModal({
       );
       setPacientesFiltrados(pacientesDelDoctor);
 
-      // Resetear paciente seleccionado si no está en la nueva lista
       if (
         formData.paciente_id &&
         !pacientesDelDoctor.some((p) => p.id == formData.paciente_id)
@@ -81,13 +91,15 @@ export default function CitaModal({
       return;
     }
 
-    // Mostrar confirmación antes de guardar
     const pacienteSeleccionado = pacientes.find(
       (p) => p.id === formData.paciente_id
     );
     const doctorAsignado = isAdmin
       ? doctores.find((d) => d.id == formData.odontologo_id)?.nombre
       : null;
+
+    // Formatear la hora para mostrar en el mensaje de confirmación
+    const horaFormateada = formatHora24(formData.hora);
 
     const result = await Swal.fire({
       title: cita ? "¿Actualizar cita?" : "¿Confirmar cita?",
@@ -104,7 +116,7 @@ export default function CitaModal({
               : ""
           }
           <p><strong>Fecha:</strong> ${formData.fecha.toLocaleDateString()}</p>
-          <p><strong>Hora:</strong> ${formData.hora}</p>
+          <p><strong>Hora:</strong> ${horaFormateada}</p>
           ${
             formData.procedimiento
               ? `<p><strong>Procedimiento:</strong> ${formData.procedimiento}</p>`
@@ -130,11 +142,10 @@ export default function CitaModal({
       const citaParaEnviar = {
         ...formData,
         fecha: formData.fecha.toISOString().split("T")[0],
-        // Usar el odontologo_id seleccionado o el del usuario logueado
+        hora: horaFormateada, // Asegurar que la hora esté en formato 24h
         odontologo_id: isAdmin ? formData.odontologo_id : odontologoId,
       };
 
-      // Si estamos editando, agregar el ID
       if (cita) {
         citaParaEnviar.id = cita.id;
       }
@@ -171,7 +182,6 @@ export default function CitaModal({
   };
 
   const handleClose = () => {
-    // Resetear el formulario al cerrar
     setFormData({
       paciente_id: "",
       fecha: new Date(),
@@ -215,7 +225,6 @@ export default function CitaModal({
             </div>
           )}
 
-          {/* Selector de estado solo en modo edición */}
           {cita && (
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-1">
@@ -276,6 +285,8 @@ export default function CitaModal({
                 }
                 className="w-full p-2 border rounded"
                 required
+                step="600"
+                pattern="[0-9]{2}:[0-9]{2}" // Asegura formato HH:MM
               />
             </div>
           </div>
