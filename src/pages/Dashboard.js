@@ -9,6 +9,7 @@ import {
   FiHome,
   FiClock,
   FiArrowLeft,
+  FiX,
 } from "react-icons/fi";
 import Sidebar from "../components/dashboard/Sidebar";
 import Pacientes from "../components/dashboard/Pacientes";
@@ -24,8 +25,9 @@ export default function Dashboard() {
   const [doctores, setListaDoctores] = useState([]);
   const [citas, setCitas] = useState([]);
   const [loading, setLoading] = useState({ pacientes: true, citas: true });
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Cambiado a false por defecto en móviles
   const [userData, setUserData] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
 
   // Nuevo sistema de secciones
@@ -39,6 +41,27 @@ export default function Dashboard() {
   const [modalCitaOpen, setModalCitaOpen] = useState(false);
   const [currentCita, setCurrentCita] = useState(null);
 
+  // Detectar cambios en el tamaño de la pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+
+      // En móviles, cerramos el sidebar automáticamente
+      if (mobile && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+
+      // En escritorio, aseguramos que el sidebar esté abierto
+      if (!mobile && !sidebarOpen) {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [sidebarOpen]);
+
   const handleEditCita = (cita) => {
     setCurrentCita(cita);
     setModalCitaOpen(true);
@@ -49,7 +72,7 @@ export default function Dashboard() {
     setCurrentCita(null);
   };
 
-  // Funciones para fetch data
+  // Funciones para fetch data (sin cambios)
   const fetchPacientes = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -110,7 +133,7 @@ export default function Dashboard() {
     }
   };
 
-  // Funciones de manejo
+  // Funciones de manejo (sin cambios)
   const handleSavePaciente = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -263,7 +286,7 @@ export default function Dashboard() {
     navigate("/");
   };
 
-  // Formateadores
+  // Formateadores (sin cambios)
   const formatFecha = (fechaString) => {
     if (!fechaString) return "No registrada";
     return new Date(fechaString).toLocaleDateString("es-ES", {
@@ -278,7 +301,7 @@ export default function Dashboard() {
     return horaString.substring(0, 5);
   };
 
-  // Efectos iniciales
+  // Efectos iniciales (sin cambios)
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
@@ -312,23 +335,51 @@ export default function Dashboard() {
     </div>
   );
 
+  // Función para cambiar sección (cierra sidebar en móviles)
+  const handleSectionChange = (section) => {
+    setCurrentSection(section);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 relative">
+      {/* Overlay para móviles cuando el sidebar está abierto */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <Sidebar
         open={sidebarOpen}
         user={userData}
         currentSection={currentSection}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
-        onSectionChange={setCurrentSection}
+        onSectionChange={handleSectionChange}
         onAddPatient={() => {
           setCurrentPaciente({});
           setModalPacienteOpen(true);
+          if (isMobile) setSidebarOpen(false);
         }}
         onLogout={handleLogout}
+        isMobile={isMobile}
       />
 
-      <div className="flex-1 overflow-auto">
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 p-4 md:p-8">
+      <div className="flex-1 overflow-auto relative">
+        {/* Botón de menú móvil */}
+        {isMobile && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="fixed top-4 left-4 z-20 bg-teal-600 text-white p-2 rounded-md shadow-lg"
+          >
+            <FiMenu size={24} />
+          </button>
+        )}
+
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 p-4 md:p-8 pt-16 md:pt-8">
           <div className="max-w-6xl mx-auto">
             {/* Sección de Pacientes */}
             {currentSection === "pacientes" && (
@@ -367,20 +418,20 @@ export default function Dashboard() {
             {/* Sección de Citas */}
             {currentSection === "citas" && (
               <>
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                   <h1 className="text-2xl font-bold text-gray-800">
                     Próximas Citas
                   </h1>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                     <button
                       onClick={() => setCurrentSection("pacientes")}
-                      className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg flex items-center gap-2"
+                      className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg flex items-center justify-center gap-2"
                     >
                       <FiArrowLeft /> Pacientes
                     </button>
                     <button
                       onClick={() => setModalCitaOpen(true)}
-                      className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                      className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2"
                     >
                       <FiPlus /> Nueva Cita
                     </button>
@@ -403,13 +454,13 @@ export default function Dashboard() {
             {/* Sección de Pagos (Placeholder) */}
             {currentSection === "pagos" && (
               <>
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                   <h1 className="text-2xl font-bold text-gray-800">
                     Gestión de Pagos
                   </h1>
                   <button
                     onClick={() => setCurrentSection("pacientes")}
-                    className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg flex items-center gap-2"
+                    className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg flex items-center justify-center gap-2"
                   >
                     <FiArrowLeft /> Volver
                   </button>
