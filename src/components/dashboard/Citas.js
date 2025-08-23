@@ -11,6 +11,7 @@ import {
   FiCalendar,
   FiEdit2,
   FiTrash2,
+  FiFilter,
 } from "react-icons/fi";
 
 export default function Citas({
@@ -25,7 +26,19 @@ export default function Citas({
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [dateRange, setDateRange] = useState({
+    desde: "",
+    hasta: "",
+  });
+  const [showDateFilter, setShowDateFilter] = useState(false);
   const [filteredCitas, setFilteredCitas] = useState([]);
+
+  // Función para obtener solo la parte de la fecha (ignora horas, minutos, etc.)
+  const getDatePart = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  };
 
   const handleDeleteWithConfirmation = (
     id,
@@ -63,7 +76,7 @@ export default function Citas({
     });
   };
 
-  // Filtrar citas basado en búsqueda y selección de doctor
+  // Filtrar citas basado en búsqueda, doctor y fechas
   useEffect(() => {
     let result = [...citas];
 
@@ -83,8 +96,42 @@ export default function Citas({
       );
     }
 
+    // FILTRADO POR FECHAS - SOLUCIÓN DEFINITIVA
+    if (dateRange.desde || dateRange.hasta) {
+      result = result.filter((cita) => {
+        const citaDate = getDatePart(cita.fecha);
+        if (!citaDate) return false;
+
+        let pasaFiltro = true;
+
+        // Filtro "Desde"
+        if (dateRange.desde) {
+          const desdeDate = getDatePart(dateRange.desde);
+          pasaFiltro = pasaFiltro && citaDate >= desdeDate;
+        }
+
+        // Filtro "Hasta" - incluir todo el día seleccionado
+        if (dateRange.hasta) {
+          const hastaDate = getDatePart(dateRange.hasta);
+          const hastaDatePlusOne = new Date(hastaDate);
+          hastaDatePlusOne.setDate(hastaDatePlusOne.getDate() + 1);
+
+          pasaFiltro = pasaFiltro && citaDate < hastaDatePlusOne;
+        }
+
+        return pasaFiltro;
+      });
+    }
+
     setFilteredCitas(result);
-  }, [citas, searchTerm, selectedDoctor, isAdmin]);
+  }, [citas, searchTerm, selectedDoctor, dateRange, isAdmin]);
+
+  const clearDateFilter = () => {
+    setDateRange({ desde: "", hasta: "" });
+  };
+
+  const hasActiveFilters =
+    searchTerm || selectedDoctor || dateRange.desde || dateRange.hasta;
 
   if (loading) return <LoadingSpinner />;
 
@@ -117,7 +164,6 @@ export default function Citas({
       header: "Procedimiento",
       accessor: "procedimiento",
       render: (procedimiento) => {
-        // Convertir a string si no lo es (maneja null, undefined, números, etc.)
         const procedimientoStr = String(procedimiento || "");
         return (
           <div className="text-sm text-gray-900">
@@ -177,7 +223,7 @@ export default function Citas({
   // Modificar columnas para admin si es necesario
   const modifiedColumns = isAdmin
     ? [
-        ...columns.slice(0, 1), // Primera columna (Paciente)
+        ...columns.slice(0, 1),
         {
           header: "Doctor",
           render: (row) => (
@@ -187,50 +233,169 @@ export default function Citas({
             </div>
           ),
         },
-        ...columns.slice(1), // Resto de columnas
+        ...columns.slice(1),
       ]
     : columns;
 
   return (
     <div className="space-y-4">
       {/* Barra de búsqueda y filtros */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-1/2">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiSearch className="text-gray-400" />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full md:w-1/2">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+              placeholder="Buscar citas..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <input
-            type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
-            placeholder="Buscar citas..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+
+          {isAdmin && (
+            <div className="w-full md:w-1/3">
+              <DoctorSelect
+                doctores={doctores}
+                value={selectedDoctor}
+                onChange={setSelectedDoctor}
+              />
+            </div>
+          )}
+
+          <button
+            onClick={() => setShowDateFilter(!showDateFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition"
+          >
+            <FiFilter size={16} />
+            <span>Filtrar por Fecha</span>
+          </button>
         </div>
 
-        {isAdmin && (
-          <div className="w-full md:w-1/3">
-            <DoctorSelect
-              doctores={doctores}
-              value={selectedDoctor}
-              onChange={setSelectedDoctor}
-            />
+        {/* Filtro de fechas */}
+        {showDateFilter && (
+          <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Desde
+                </label>
+                <input
+                  type="date"
+                  value={dateRange.desde}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({ ...prev, desde: e.target.value }))
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+                />
+              </div>
+
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hasta
+                </label>
+                <input
+                  type="date"
+                  value={dateRange.hasta}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({ ...prev, hasta: e.target.value }))
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+                />
+              </div>
+            </div>
+
+            {/* Botones - full width en móvil, inline en desktop */}
+            <div className="flex flex-col md:flex-row gap-2 mt-4">
+              <button
+                onClick={clearDateFilter}
+                className="w-full md:w-auto px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition"
+              >
+                Limpiar
+              </button>
+              <button
+                onClick={() => setShowDateFilter(false)}
+                className="w-full md:w-auto px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition"
+              >
+                Aplicar
+              </button>
+            </div>
+
+            {(dateRange.desde || dateRange.hasta) && (
+              <div className="mt-3 text-sm text-gray-600">
+                <strong>Filtro activo:</strong>
+                {dateRange.desde && ` Desde: ${formatFecha(dateRange.desde)}`}
+                {dateRange.hasta && ` Hasta: ${formatFecha(dateRange.hasta)}`}
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Información de filtros activos */}
+      {hasActiveFilters && (
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-blue-800">
+            <span className="font-medium">Filtros activos:</span>
+            {searchTerm && (
+              <span className="bg-blue-100 px-2 py-1 rounded-full">
+                Búsqueda: "{searchTerm}"
+              </span>
+            )}
+            {selectedDoctor && (
+              <span className="bg-blue-100 px-2 py-1 rounded-full">
+                Doctor: {doctores.find((d) => d.id == selectedDoctor)?.nombre}
+              </span>
+            )}
+            {dateRange.desde && (
+              <span className="bg-blue-100 px-2 py-1 rounded-full">
+                Desde: {formatFecha(dateRange.desde)}
+              </span>
+            )}
+            {dateRange.hasta && (
+              <span className="bg-blue-100 px-2 py-1 rounded-full">
+                Hasta: {formatFecha(dateRange.hasta)}
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedDoctor("");
+                clearDateFilter();
+              }}
+              className="text-blue-600 hover:text-blue-800 underline text-xs"
+            >
+              Limpiar todos
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tabla de citas */}
       {filteredCitas.length === 0 ? (
         <EmptyState
           icon={<FiCalendar size={48} />}
           title={
-            searchTerm || selectedDoctor
-              ? "No se encontraron resultados"
+            hasActiveFilters
+              ? "No se encontraron citas con los filtros aplicados"
               : "No hay citas programadas"
+          }
+          subtitle={
+            hasActiveFilters
+              ? "Intenta ajustar los criterios de búsqueda"
+              : "No hay citas agendadas para mostrar"
           }
         />
       ) : (
-        <Table data={filteredCitas} columns={modifiedColumns} />
+        <div>
+          <div className="text-sm text-gray-600 mb-3">
+            Mostrando {filteredCitas.length} de {citas.length} citas
+            {hasActiveFilters && " (filtradas)"}
+          </div>
+          <Table data={filteredCitas} columns={modifiedColumns} />
+        </div>
       )}
     </div>
   );
