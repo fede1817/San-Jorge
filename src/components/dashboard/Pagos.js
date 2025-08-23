@@ -1,198 +1,234 @@
 import React, { useState, useEffect } from "react";
-import {
-  FiDollarSign,
-  FiPlus,
-  FiMinus,
-  FiTrash2,
-  FiSave,
-} from "react-icons/fi";
+import { FiDollarSign, FiPlus, FiEye, FiTrash2, FiEdit } from "react-icons/fi";
 import { toast } from "react-toastify";
+import Modal from "../ui/Modal";
+import Table from "./Table";
+import NuevoPagoModal from "../modals/NuevoPagoModal";
 
-const Pagos = ({ paciente }) => {
-  const [conceptos, setConceptos] = useState([]);
-  const [detalles, setDetalles] = useState([]);
-  const [metodoPago, setMetodoPago] = useState("efectivo");
-  const [notas, setNotas] = useState("");
+const Pagos = () => {
+  const [pagos, setPagos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showNuevoPagoModal, setShowNuevoPagoModal] = useState(false);
+  const [pagoSeleccionado, setPagoSeleccionado] = useState(null);
 
   useEffect(() => {
-    const fetchConceptos = async () => {
-      try {
-        const res = await fetch("/api/pacientes/conceptos"); // Cambiado a /api/pagos/conceptos
-        const data = await res.json();
-        setConceptos(data);
-      } catch (error) {
-        toast.error("Error al cargar conceptos de pago");
-      }
-    };
-    fetchConceptos();
+    fetchPagos();
   }, []);
 
-  const agregarConcepto = (concepto) => {
-    setDetalles([
-      ...detalles,
-      {
-        concepto_id: concepto.id,
-        nombre: concepto.nombre,
-        precio_unitario: concepto.precio_base,
-        cantidad: 1,
-        descuento: 0,
-      },
-    ]);
-  };
-
-  const aumentarCantidad = (index) => {
-    const nuevosDetalles = [...detalles];
-    nuevosDetalles[index].cantidad += 1;
-    setDetalles(nuevosDetalles);
-  };
-
-  const disminuirCantidad = (index) => {
-    const nuevosDetalles = [...detalles];
-    if (nuevosDetalles[index].cantidad > 1) {
-      nuevosDetalles[index].cantidad -= 1;
-      setDetalles(nuevosDetalles);
-    }
-  };
-
-  const eliminarConcepto = (index) => {
-    const nuevosDetalles = detalles.filter((_, i) => i !== index);
-    setDetalles(nuevosDetalles);
-  };
-
-  const handleGuardarPago = async () => {
+  const fetchPagos = async () => {
     try {
-      const res = await fetch("/api/pacientes/pagos", {
-        // Cambiado a /api/pagos
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          paciente_id: paciente.id,
-          detalles: detalles,
-          metodo_pago: metodoPago,
-          notas: notas,
-        }),
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:3001/api/pagos/", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.mensaje || "Error al guardar pago");
-      }
-
-      toast.success("Pago registrado correctamente");
-      setDetalles([]);
-      setNotas("");
+      if (!res.ok) throw new Error("Error al cargar pagos");
+      const data = await res.json();
+      setPagos(data);
     } catch (error) {
-      console.error("Error al registrar pago:", error);
-      toast.error(error.message || "Ocurrió un error al registrar el pago");
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-bold mb-4 flex items-center">
-        <FiDollarSign className="mr-2" /> Registro de Pagos
-      </h2>
+  const handleEliminarPago = async (id) => {
+    if (!window.confirm("¿Está seguro de eliminar este pago?")) return;
 
-      <div className="mb-6">
-        <h3 className="font-medium mb-2">Conceptos disponibles:</h3>
-        <div className="flex flex-wrap gap-2">
-          {conceptos.map((concepto) => (
-            <button
-              key={concepto.id}
-              onClick={() => agregarConcepto(concepto)}
-              className="px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
-            >
-              {concepto.nombre} (${concepto.precio_base})
-            </button>
-          ))}
-        </div>
-      </div>
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:3001/api/pagos/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      <div className="mb-4">
-        <h3 className="font-medium mb-2">Detalles del pago:</h3>
-        {detalles.length === 0 ? (
-          <p className="text-gray-500">No hay conceptos agregados</p>
-        ) : (
-          <div className="space-y-2">
-            {detalles.map((item, index) => (
-              <div key={index} className="flex items-center border-b pb-2">
-                <div className="flex-1">
-                  <p>{item.nombre}</p>
-                  <div className="flex items-center mt-1">
-                    <button
-                      onClick={() => disminuirCantidad(index)}
-                      className="p-1 hover:bg-gray-100 rounded"
-                    >
-                      <FiMinus size={14} />
-                    </button>
-                    <span className="mx-2">{item.cantidad}</span>
-                    <button
-                      onClick={() => aumentarCantidad(index)}
-                      className="p-1 hover:bg-gray-100 rounded"
-                    >
-                      <FiPlus size={14} />
-                    </button>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p>${(item.precio_unitario * item.cantidad).toFixed(2)}</p>
-                </div>
-                <button
-                  onClick={() => eliminarConcepto(index)}
-                  className="ml-2 p-1 hover:bg-gray-100 rounded"
-                >
-                  <FiTrash2 className="text-red-500" />
-                </button>
-              </div>
-            ))}
-            <div className="font-bold text-right mt-4">
-              Total: $
-              {detalles
-                .reduce(
-                  (sum, item) => sum + item.precio_unitario * item.cantidad,
-                  0
-                )
-                .toFixed(2)}
+      if (!res.ok) throw new Error("Error al eliminar pago");
+
+      toast.success("Pago eliminado correctamente");
+      fetchPagos();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const columns = [
+    {
+      header: "Paciente",
+      render: (row) => (
+        <div className="flex items-center">
+          <div className="ml-4">
+            <div className="text-sm font-medium text-gray-900">
+              {row.paciente_nombre} {row.paciente_apellido}
             </div>
+            <div className="text-xs text-gray-500">{row.paciente_telefono}</div>
           </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block mb-1">Método de pago</label>
-          <select
-            value={metodoPago}
-            onChange={(e) => setMetodoPago(e.target.value)}
-            className="w-full p-2 border rounded"
-          >
-            <option value="efectivo">Efectivo</option>
-            <option value="tarjeta">Tarjeta</option>
-            <option value="transferencia">Transferencia</option>
-          </select>
         </div>
+      ),
+    },
+    {
+      header: "Fecha",
+      accessor: "fecha",
+      render: (fecha) => new Date(fecha).toLocaleDateString("es-ES"),
+    },
+    {
+      header: "Monto",
+      accessor: "monto_total",
+      render: (monto) => (
+        <span className="font-semibold">${parseFloat(monto).toFixed(2)}</span>
+      ),
+    },
+    {
+      header: "Método",
+      accessor: "metodo_pago",
+      render: (metodo) => <span className="capitalize">{metodo}</span>,
+    },
+    {
+      header: "Estado",
+      accessor: "estado",
+      render: (estado) => (
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${
+            estado === "completado"
+              ? "bg-green-100 text-green-800"
+              : estado === "pendiente"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
+          {estado}
+        </span>
+      ),
+    },
+    {
+      header: "Acciones",
+      render: (row) => (
+        <div className="flex justify-end space-x-2">
+          <button
+            onClick={() => setPagoSeleccionado(row)}
+            className="text-blue-600 hover:text-blue-800 p-1"
+            title="Ver detalles"
+          >
+            <FiEye />
+          </button>
+          <button
+            onClick={() => handleEliminarPago(row.id)}
+            className="text-red-600 hover:text-red-800 p-1"
+            title="Eliminar"
+          >
+            <FiTrash2 />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+          <FiDollarSign className="mr-2" /> Gestión de Pagos
+        </h1>
+        <button
+          onClick={() => setShowNuevoPagoModal(true)}
+          className="flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+        >
+          <FiPlus className="mr-2" /> Nuevo Pago
+        </button>
       </div>
 
-      <div className="mb-4">
-        <label className="block mb-1">Notas</label>
-        <textarea
-          value={notas}
-          onChange={(e) => setNotas(e.target.value)}
-          className="w-full p-2 border rounded"
-          rows="2"
-        />
-      </div>
+      {pagos.length === 0 ? (
+        <div className="bg-white rounded-xl p-6 shadow-md text-center">
+          <div className="text-6xl mb-4">💰</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+            No hay pagos registrados
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Comienza registrando tu primer pago
+          </p>
+          <button
+            onClick={() => setShowNuevoPagoModal(true)}
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+          >
+            Registrar Primer Pago
+          </button>
+        </div>
+      ) : (
+        <Table data={pagos} columns={columns} />
+      )}
 
-      <button
-        onClick={handleGuardarPago}
-        disabled={detalles.length === 0}
-        className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-300"
-      >
-        <FiSave className="mr-2" /> Registrar Pago
-      </button>
+      {/* Modal para nuevo pago */}
+      <NuevoPagoModal
+        isOpen={showNuevoPagoModal}
+        onClose={() => setShowNuevoPagoModal(false)}
+        onSave={() => {
+          fetchPagos();
+          setShowNuevoPagoModal(false);
+        }}
+      />
+
+      {/* Modal para ver detalles del pago */}
+      {pagoSeleccionado && (
+        <Modal
+          isOpen={!!pagoSeleccionado}
+          onClose={() => setPagoSeleccionado(null)}
+          title={`Detalles del Pago - ${pagoSeleccionado.paciente_nombre}`}
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="font-semibold">Paciente:</label>
+                <p>
+                  {pagoSeleccionado.paciente_nombre}{" "}
+                  {pagoSeleccionado.paciente_apellido}
+                </p>
+              </div>
+              <div>
+                <label className="font-semibold">Fecha:</label>
+                <p>
+                  {new Date(pagoSeleccionado.fecha).toLocaleDateString("es-ES")}
+                </p>
+              </div>
+              <div>
+                <label className="font-semibold">Monto Total:</label>
+                <p className="text-green-600 font-bold">
+                  ${parseFloat(pagoSeleccionado.monto_total).toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <label className="font-semibold">Método:</label>
+                <p className="capitalize">{pagoSeleccionado.metodo_pago}</p>
+              </div>
+              <div>
+                <label className="font-semibold">Estado:</label>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    pagoSeleccionado.estado === "completado"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {pagoSeleccionado.estado}
+                </span>
+              </div>
+            </div>
+
+            {pagoSeleccionado.notas && (
+              <div>
+                <label className="font-semibold">Notas:</label>
+                <p className="text-gray-600">{pagoSeleccionado.notas}</p>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

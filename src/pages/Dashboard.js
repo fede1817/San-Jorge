@@ -18,6 +18,7 @@ import StatsCards from "../components/dashboard/StatsCards";
 import VerTratamientosModal from "../components/modals/VerTratamientosModal";
 import PacienteModal from "../components/modals/PacienteModal";
 import CitaModal from "../components/modals/CitaModal";
+import Pagos from "../components/dashboard/Pagos";
 
 export default function Dashboard() {
   // Estados principales
@@ -127,6 +128,7 @@ export default function Dashboard() {
 
       if (!res.ok) throw new Error("Error al cargar doctores");
       const data = await res.json();
+      console.log(data);
       setListaDoctores(data);
     } catch (error) {
       toast.error(error.message);
@@ -466,7 +468,7 @@ export default function Dashboard() {
                   </button>
                 </div>
 
-                <PagosSection />
+                <Pagos />
               </>
             )}
           </div>
