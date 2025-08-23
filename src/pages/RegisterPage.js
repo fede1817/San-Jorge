@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import { API_URL } from "./config";
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -39,7 +40,7 @@ function RegisterPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3001/api/login/register", {
+      const res = await fetch(API_URL + "/api/login/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

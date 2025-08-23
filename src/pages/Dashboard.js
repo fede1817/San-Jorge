@@ -19,6 +19,7 @@ import VerTratamientosModal from "../components/modals/VerTratamientosModal";
 import PacienteModal from "../components/modals/PacienteModal";
 import CitaModal from "../components/modals/CitaModal";
 import Pagos from "../components/dashboard/Pagos";
+import { API_URL } from "./config";
 
 export default function Dashboard() {
   // Estados principales
@@ -77,7 +78,7 @@ export default function Dashboard() {
   const fetchPacientes = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3001/api/pacientes", {
+      const res = await fetch(API_URL + "/api/pacientes", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -105,7 +106,7 @@ export default function Dashboard() {
   const fetchCitas = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3001/api/pacientes/proximas", {
+      const res = await fetch(API_URL + "/api/pacientes/proximas", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -122,7 +123,7 @@ export default function Dashboard() {
   const fetchDoctores = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3001/api/pacientes/doctores", {
+      const res = await fetch(API_URL + "/api/pacientes/doctores", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -142,8 +143,8 @@ export default function Dashboard() {
       const user = JSON.parse(localStorage.getItem("user"));
       const metodo = currentPaciente.id ? "PUT" : "POST";
       const url = currentPaciente.id
-        ? `http://localhost:3001/api/pacientes/${currentPaciente.id}`
-        : "http://localhost:3001/api/pacientes";
+        ? API_URL + `/api/pacientes/${currentPaciente.id}`
+        : API_URL + "/api/pacientes";
 
       const datosPaciente = {
         nombre: currentPaciente.nombre,
@@ -183,7 +184,7 @@ export default function Dashboard() {
   const handleDeletePaciente = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3001/api/pacientes/${id}`, {
+      const res = await fetch(API_URL + `/api/pacientes/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -209,9 +210,9 @@ export default function Dashboard() {
       let url = "";
 
       if (citaData.id) {
-        url = `http://localhost:3001/api/pacientes/citas/${citaData.id}`;
+        url = API_URL + `/api/pacientes/citas/${citaData.id}`;
       } else {
-        url = `http://localhost:3001/api/pacientes/${citaData.paciente_id}/tratamiento`;
+        url = API_URL + `/api/pacientes/${citaData.paciente_id}/tratamiento`;
       }
 
       const datosCita = {
@@ -261,13 +262,10 @@ export default function Dashboard() {
   const handleDeleteCita = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `http://localhost:3001/api/pacientes/citas/${id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await fetch(API_URL + `/api/pacientes/citas/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!res.ok) {
         const errorData = await res.json();
